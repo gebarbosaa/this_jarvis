@@ -22,6 +22,7 @@ export interface Database {
         };
         Insert: Partial<Database['public']['Tables']['profiles']['Row']> & { id: string };
         Update: Partial<Database['public']['Tables']['profiles']['Row']>;
+        Relationships: [];
       };
       tasks: {
         Row: {
@@ -42,6 +43,7 @@ export interface Database {
           title: string;
         };
         Update: Partial<Database['public']['Tables']['tasks']['Row']>;
+        Relationships: [];
       };
       habits: {
         Row: {
@@ -61,6 +63,7 @@ export interface Database {
           name: string;
         };
         Update: Partial<Database['public']['Tables']['habits']['Row']>;
+        Relationships: [];
       };
       habit_logs: {
         Row: {
@@ -77,6 +80,7 @@ export interface Database {
           user_id: string;
         };
         Update: Partial<Database['public']['Tables']['habit_logs']['Row']>;
+        Relationships: [];
       };
       notes: {
         Row: {
@@ -91,6 +95,7 @@ export interface Database {
         };
         Insert: Partial<Database['public']['Tables']['notes']['Row']> & { user_id: string };
         Update: Partial<Database['public']['Tables']['notes']['Row']>;
+        Relationships: [];
       };
       goals: {
         Row: {
@@ -108,6 +113,7 @@ export interface Database {
           title: string;
         };
         Update: Partial<Database['public']['Tables']['goals']['Row']>;
+        Relationships: [];
       };
       goal_steps: {
         Row: {
@@ -125,6 +131,7 @@ export interface Database {
           title: string;
         };
         Update: Partial<Database['public']['Tables']['goal_steps']['Row']>;
+        Relationships: [];
       };
       reminders: {
         Row: {
@@ -143,6 +150,7 @@ export interface Database {
           remind_at: string;
         };
         Update: Partial<Database['public']['Tables']['reminders']['Row']>;
+        Relationships: [];
       };
       calendar_events: {
         Row: {
@@ -164,6 +172,7 @@ export interface Database {
           start_at: string;
         };
         Update: Partial<Database['public']['Tables']['calendar_events']['Row']>;
+        Relationships: [];
       };
       weekly_plans: {
         Row: {
@@ -180,6 +189,7 @@ export interface Database {
           week_start_date: string;
         };
         Update: Partial<Database['public']['Tables']['weekly_plans']['Row']>;
+        Relationships: [];
       };
       ai_conversations: {
         Row: {
@@ -193,6 +203,7 @@ export interface Database {
           user_id: string;
         };
         Update: Partial<Database['public']['Tables']['ai_conversations']['Row']>;
+        Relationships: [];
       };
       ai_messages: {
         Row: {
@@ -210,6 +221,7 @@ export interface Database {
           content: string;
         };
         Update: Partial<Database['public']['Tables']['ai_messages']['Row']>;
+        Relationships: [];
       };
     };
   };
