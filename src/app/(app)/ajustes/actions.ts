@@ -12,7 +12,7 @@ export async function updateProfile(formData: FormData) {
 
   const display_name = String(formData.get('display_name') ?? '').trim();
 
-  await supabase.from('profiles').update({ display_name }).eq('id', user.id);
+  await supabase.from('profiles').update({ display_name } as any).eq('id', user.id);
 
   revalidatePath('/ajustes');
   revalidatePath('/inicio');
