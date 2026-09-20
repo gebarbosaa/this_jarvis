@@ -138,6 +138,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Mensagem vazia.' }, { status: 400 });
   }
 
+  // garante que a conversa pertence ao usuário
   const { data: conversation } = await supabase
     .from('ai_conversations')
     .select('id')
@@ -178,6 +179,7 @@ export async function POST(request: Request) {
   const acoesRealizadas: string[] = [];
   let textoResposta = '';
 
+  // Até 4 idas e vindas: a IA pode encadear mais de uma ferramenta antes de responder em texto.
   for (let iteracao = 0; iteracao < 4; iteracao++) {
     let data;
     try {
@@ -194,7 +196,9 @@ export async function POST(request: Request) {
     const blocosFerramenta = data.content?.filter((b: { type: string }) => b.type === 'tool_use') ?? [];
     textoResposta = extrairTexto(data);
 
-    if (blocosFerramenta.length === 0) break;
+    if (blocosFerramenta.length === 0) {
+      break;
+    }
 
     mensagensParaApi.push({ role: 'assistant', content: data.content });
 
@@ -202,14 +206,20 @@ export async function POST(request: Request) {
       blocosFerramenta.map(async (bloco: { id: string; name: string; input: Record<string, string> }) => {
         const resultado = await executarFerramenta(supabase, user.id, bloco.name, bloco.input);
         acoesRealizadas.push(resultado);
-        return { type: 'tool_result', tool_use_id: bloco.id, content: resultado };
+        return {
+          type: 'tool_result',
+          tool_use_id: bloco.id,
+          content: resultado,
+        };
       })
     );
 
     mensagensParaApi.push({ role: 'user', content: resultados });
   }
 
-  if (!textoResposta && acoesRealizadas.length > 0) textoResposta = acoesRealizadas.join(' ');
+  if (!textoResposta && acoesRealizadas.length > 0) {
+    textoResposta = acoesRealizadas.join(' ');
+  }
 
   if (acoesRealizadas.length > 0) {
     ['/inicio', '/tarefas', '/habitos', '/notas', '/lembretes', '/objetivos', '/semana'].forEach((p) =>
