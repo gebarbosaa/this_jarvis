@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { chamarClaude, extrairTexto } from './anthropic';
+import { chamarIA, extrairTexto } from './openai';
 import { diasDaSemana, toISODate } from '@/lib/date';
 
 export async function gerarPlanoSemanal(
@@ -30,7 +30,7 @@ export async function gerarPlanoSemanal(
 
   const contexto = JSON.stringify({ tarefas: tasks, habitos: habits, objetivos: goals, eventos: events });
 
-  const data = await chamarClaude({
+  const data = await chamarIA({
     maxTokens: 500,
     system:
       'Você organiza a semana de um usuário a partir dos dados reais dele. ' +
