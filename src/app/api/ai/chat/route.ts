@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { todayISODate } from '@/lib/date';
-import { chamarClaude, extrairTexto } from '@/lib/ai/anthropic';
+import { chamarIA, extrairTexto, extrairChamadasDeFerramenta } from '@/lib/ai/openai';
 
 const SYSTEM_PROMPT = `Você é a Secretária, uma assistente pessoal organizada, direta e gentil.
 Você tem ferramentas reais para criar tarefas, hábitos, notas, lembretes e objetivos
@@ -164,14 +164,14 @@ export async function POST(request: Request) {
     .order('created_at', { ascending: true })
     .limit(30);
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.OPENAI_API_KEY) {
     return NextResponse.json(
-      { error: 'ANTHROPIC_API_KEY não configurada no servidor.' },
+      { error: 'OPENAI_API_KEY não configurada no servidor.' },
       { status: 500 }
     );
   }
 
-  const mensagensParaApi: Array<{ role: string; content: unknown }> = (historico ?? []).map((m) => ({
+  const mensagensParaApi: Array<{ role?: string; content?: unknown; [key: string]: unknown }> = (historico ?? []).map((m) => ({
     role: m.role === 'assistant' ? 'assistant' : 'user',
     content: m.content,
   }));
@@ -183,7 +183,7 @@ export async function POST(request: Request) {
   for (let iteracao = 0; iteracao < 4; iteracao++) {
     let data;
     try {
-      data = await chamarClaude({
+      data = await chamarIA({
         system: SYSTEM_PROMPT,
         tools: TOOLS,
         messages: mensagensParaApi as never,
@@ -193,23 +193,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Erro ao falar com a IA.' }, { status: 502 });
     }
 
-    const blocosFerramenta = data.content?.filter((b: { type: string }) => b.type === 'tool_use') ?? [];
+    const blocosFerramenta = extrairChamadasDeFerramenta(data);
     textoResposta = extrairTexto(data);
 
     if (blocosFerramenta.length === 0) {
       break;
     }
 
-    mensagensParaApi.push({ role: 'assistant', content: data.content });
+    mensagensParaApi.push(...(data.output ?? []));
 
     const resultados = await Promise.all(
-      blocosFerramenta.map(async (bloco: { id: string; name: string; input: Record<string, string> }) => {
+      blocosFerramenta.map(async (bloco) => {
         const resultado = await executarFerramenta(supabase, user.id, bloco.name, bloco.input);
         acoesRealizadas.push(resultado);
         return {
-          type: 'tool_result',
-          tool_use_id: bloco.id,
-          content: resultado,
+          type: 'function_call_output',
+          call_id: bloco.callId,
+          output: resultado,
         };
       })
     );
