@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { chamarClaude, extrairTexto } from './anthropic';
+import { chamarIA, extrairTexto } from './openai';
 import { todayISODate } from '@/lib/date';
 
 /**
@@ -56,7 +56,7 @@ export async function gerarResumoDiario(
     lembretes_hoje: remindersHoje,
   });
 
-  const data = await chamarClaude({
+  const data = await chamarIA({
     maxTokens: 300,
     system:
       'Você é a Secretária, uma assistente pessoal. Escreva UMA mensagem curta (2 a 4 frases), ' +
