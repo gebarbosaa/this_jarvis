@@ -8,33 +8,21 @@ export function NewTaskForm() {
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
 
   return (
-    <form
-      ref={formRef}
-      action={async (formData) => {
-        formRef.current?.reset();
-        setPriority('medium');
-        await createTask(formData);
-      }}
-      className="mb-6 flex flex-col gap-2 rounded-card border border-border bg-white p-3"
-    >
-      <input
-        type="text"
-        name="title"
-        placeholder="Nova tarefa..."
-        required
-        className="bg-transparent px-1 py-1 text-ink outline-none placeholder:text-ink-faint"
-      />
-      <div className="flex items-center gap-2">
-        <input type="date" name="due_date" className="rounded-md border border-border bg-paper px-2 py-1.5 text-xs text-ink-soft outline-none" />
-        <input type="hidden" name="priority" value={priority} />
-        <div className="flex gap-1">
-          {(['low', 'medium', 'high'] as const).map((p) => (
-            <button key={p} type="button" onClick={() => setPriority(p)} className={`rounded-md px-2 py-1.5 text-xs capitalize transition-colors ${priority === p ? 'bg-pine text-white' : 'bg-paper text-ink-faint'}`}>
-              {p === 'low' ? 'baixa' : p === 'medium' ? 'média' : 'alta'}
-            </button>
-          ))}
+    <form ref={formRef} action={async (formData) => { formRef.current?.reset(); setPriority('medium'); await createTask(formData); }} className="form-shell">
+      <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
+        <input type="text" name="title" placeholder="Nova tarefa..." required className="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm text-ink outline-none placeholder:text-ink-faint" />
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <input type="date" name="due_date" className="field w-full sm:w-auto sm:flex-none" />
+          <input type="hidden" name="priority" value={priority} />
+          <div className="flex flex-wrap gap-1.5">
+            {(['low','medium','high'] as const).map((p) => (
+              <button key={p} type="button" onClick={() => setPriority(p)} className={`rounded-xl px-3 py-2 text-xs font-bold capitalize ${priority === p ? 'bg-pine text-black' : 'bg-paper text-ink-faint'}`}>
+                {p === 'low' ? 'baixa' : p === 'medium' ? 'média' : 'alta'}
+              </button>
+            ))}
+          </div>
+          <button type="submit" className="primary-button w-full sm:w-auto">Adicionar</button>
         </div>
-        <button type="submit" className="ml-auto rounded-md bg-pine px-3 py-1.5 text-xs font-medium text-white">Adicionar</button>
       </div>
     </form>
   );
