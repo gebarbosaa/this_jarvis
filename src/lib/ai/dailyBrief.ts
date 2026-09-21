@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { chamarIA, extrairTexto } from './openai';
+import { chamarIA, extrairTexto } from './gemini';
 import { todayISODate } from '@/lib/date';
 
 /**
