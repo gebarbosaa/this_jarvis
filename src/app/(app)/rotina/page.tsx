@@ -47,13 +47,15 @@ export default async function RotinaPage() {
   const supabase=createClient();
   const {data:{user}}=await supabase.auth.getUser();
   if(!user)return null;
-  const today = new Date();\n  const dayOfWeek = today.getDay();\n  const [{data:settings},{data:activities}]=await Promise.all([
+  const today = new Date();
+  const dayOfWeek = today.getDay();\n  const [{data:settings},{data:activities}]=await Promise.all([
     supabase.from('routine_settings').select('day_start,day_end').eq('user_id',user.id).maybeSingle(),
-    supabase.from('routine_activities').select('id,title,duration_minutes,fixed_start,kind').eq('user_id',user.id).eq('active',true).order('created_at',{ascending:true}),
+    supabase.from('routine_activities').select('id,title,duration_minutes,fixed_start,kind,days_of_week').eq('user_id',user.id).eq('active',true).order('created_at',{ascending:true}),
   ]);
   const dayStart=settings?.day_start??'08:00';
   const dayEnd=settings?.day_end??'22:00';
-  const atividadesDoDia=(activities??[]).filter((a:any)=>(a.days_of_week??[1,2,3,4,5]).includes(dayOfWeek));\n  const schedule=buildSchedule(atividadesDoDia,dayStart,dayEnd);
+  const atividadesDoDia=(activities??[]).filter((a:any)=>(a.days_of_week??[1,2,3,4,5]).includes(dayOfWeek));
+  const schedule=buildSchedule(atividadesDoDia,dayStart,dayEnd);
   return <>
     <PageHeader title="Rotina" subtitle="Você coloca o que precisa fazer. A Secretária organiza o seu dia automaticamente." />
     <RoutinePlannerForm dayStart={dayStart} dayEnd={dayEnd} />
