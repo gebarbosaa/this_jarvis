@@ -14,7 +14,7 @@ export default async function SemanaPage() {
   const fim = toISODate(dias[6]);
   const hoje = todayISODate();
 
-  const [{ data: tasks }, { data: events }, { data: plano }] = await Promise.all([
+  const [{ data: tasks }, { data: events }, { data: reminders }, { data: plano }] = await Promise.all([
     supabase
       .from('tasks')
       .select('*')
@@ -28,6 +28,13 @@ export default async function SemanaPage() {
       .eq('user_id', user!.id)
       .gte('start_at', `${inicio}T00:00:00`)
       .lte('start_at', `${fim}T23:59:59`),
+    supabase
+      .from('reminders')
+      .select('*')
+      .eq('user_id', user!.id)
+      .is('dismissed_at', null)
+      .gte('remind_at', `${inicio}T00:00:00-03:00`)
+      .lte('remind_at', `${fim}T23:59:59-03:00`),
     supabase
       .from('weekly_plans')
       .select('summary, focus')
@@ -47,8 +54,9 @@ export default async function SemanaPage() {
           const dataISO = toISODate(dia);
           const tarefasDoDia = (tasks ?? []).filter((t) => t.due_date === dataISO);
           const eventosDoDia = (events ?? []).filter((e) => e.start_at.startsWith(dataISO));
+          const lembretesDoDia = (reminders ?? []).filter((r) => new Date(r.remind_at).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) === dataISO);
           const isHoje = dataISO === hoje;
-          const temItens = tarefasDoDia.length > 0 || eventosDoDia.length > 0;
+          const temItens = tarefasDoDia.length > 0 || eventosDoDia.length > 0 || lembretesDoDia.length > 0;
 
           return (
             <div
@@ -75,6 +83,14 @@ export default async function SemanaPage() {
                         : new Date(e.start_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                     </span>{' '}
                     · {e.title}
+                  </li>
+                ))}
+                {lembretesDoDia.map((r) => (
+                  <li key={`reminder-${r.id}`} className="text-sm text-ink">
+                    <span className="text-ink-faint">
+                      {new Date(r.remind_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })}
+                    </span>{' '}
+                    · 🔔 {r.title}
                   </li>
                 ))}
                 {tarefasDoDia.map((t) => (
