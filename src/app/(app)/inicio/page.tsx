@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { todayISODate, formatDiaCompleto } from '@/lib/date';
@@ -11,16 +12,20 @@ export default async function InicioPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (!user) {
+    redirect('/login');
+  }
+
   const today = todayISODate();
 
   const [{ data: profile }, { data: tasksHoje }, { data: atrasadas }, { data: habits }, { data: logsHoje }, { data: reminders }] =
     await Promise.all([
-      supabase.from('profiles').select('display_name').eq('id', user!.id).single(),
-      supabase.from('tasks').select('*').eq('user_id', user!.id).eq('status', 'pending').or(`due_date.eq.${today},due_date.is.null`).order('due_date', { ascending: true, nullsFirst: false }).limit(6),
-      supabase.from('tasks').select('id, title, due_date').eq('user_id', user!.id).eq('status', 'pending').lt('due_date', today),
-      supabase.from('habits').select('*').eq('user_id', user!.id).eq('archived', false),
-      supabase.from('habit_logs').select('habit_id').eq('user_id', user!.id).eq('logged_date', today),
-      supabase.from('reminders').select('*').eq('user_id', user!.id).is('dismissed_at', null).order('remind_at', { ascending: true }).limit(3),
+      supabase.from('profiles').select('display_name').eq('id', user.id).single(),
+      supabase.from('tasks').select('*').eq('user_id', user.id).eq('status', 'pending').or(`due_date.eq.${today},due_date.is.null`).order('due_date', { ascending: true, nullsFirst: false }).limit(6),
+      supabase.from('tasks').select('id, title, due_date').eq('user_id', user.id).eq('status', 'pending').lt('due_date', today),
+      supabase.from('habits').select('*').eq('user_id', user.id).eq('archived', false),
+      supabase.from('habit_logs').select('habit_id').eq('user_id', user.id).eq('logged_date', today),
+      supabase.from('reminders').select('*').eq('user_id', user.id).is('dismissed_at', null).order('remind_at', { ascending: true }).limit(3),
     ]);
 
   const feitosHoje = new Set((logsHoje ?? []).map((l) => l.habit_id));
