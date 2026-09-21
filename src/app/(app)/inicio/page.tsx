@@ -5,6 +5,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { todayISODate, formatDiaCompleto } from '@/lib/date';
 import { toggleTask } from '../tarefas/actions';
 import { toggleHabitToday } from '../habitos/actions';
+import { InboxForm } from './InboxForm';
 
 export default async function InicioPage() {
   const supabase = createClient();
@@ -50,6 +51,19 @@ export default async function InicioPage() {
           <span className="shrink-0 text-xs font-bold">ABRIR →</span>
         </Link>
       )}
+
+      <section className="app-card p-4 sm:p-5">
+        <div className="mb-3">
+          <p className="section-label">Caixa de entrada</p>
+          <p className="mt-1 text-sm text-ink-soft">Jogue aqui qualquer ideia, tarefa ou coisa que não quer esquecer.</p>
+        </div>
+        <InboxForm />
+        <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-bold tracking-[0.06em] text-ink-faint">
+          <span className="rounded-full bg-paper px-2.5 py-1">TAREFA</span>
+          <span className="rounded-full bg-paper px-2.5 py-1">LEMBRETE</span>
+          <span className="rounded-full bg-paper px-2.5 py-1">IDEIA</span>
+        </div>
+      </section>
 
       <div className="grid gap-5 xl:grid-cols-2">
         <Section title="Para hoje" href="/tarefas">
