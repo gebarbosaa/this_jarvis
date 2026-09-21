@@ -168,8 +168,8 @@ export async function POST(request: Request) {
     .order('created_at', { ascending: true })
     .limit(30);
 
-  const mensagensParaApi = (historico ?? []).map((m) => ({
-    role: m.role === 'assistant' ? 'model' as const : 'user' as const,
+  const mensagensParaApi: Array<{ role?: 'user' | 'assistant'; content?: unknown }> = (historico ?? []).map((m) => ({
+    role: m.role === 'assistant' ? 'assistant' as const : 'user' as const,
     content: m.content,
   }));
 
@@ -197,7 +197,12 @@ export async function POST(request: Request) {
     }
 
     const conteudoModelo = extrairConteudoDoModelo(data);
-    if (conteudoModelo) mensagensParaApi.push(conteudoModelo);
+    mensagensParaApi.push(
+      ...conteudoModelo.map((content) => ({
+        role: 'assistant' as const,
+        content: content.parts,
+      }))
+    );
 
     const resultados = await Promise.all(
       blocosFerramenta.map(async (bloco) => {
