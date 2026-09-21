@@ -2,7 +2,12 @@ import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { todayISODate } from '@/lib/date';
-import { chamarIA, extrairTexto, extrairChamadasDeFerramenta } from '@/lib/ai/openai';
+import {
+  chamarIA,
+  extrairTexto,
+  extrairChamadasDeFerramenta,
+  extrairConteudoDoModelo,
+} from '@/lib/ai/gemini';
 
 const SYSTEM_PROMPT = `Você é a Secretária, uma assistente pessoal organizada, direta e gentil.
 Você tem ferramentas reais para criar tarefas, hábitos, notas, lembretes e objetivos
@@ -99,7 +104,7 @@ async function executarFerramenta(
         title: input.title || '',
         content: input.content,
       });
-      return `Nota salva.`;
+      return 'Nota salva.';
     }
     case 'criar_lembrete': {
       await supabase.from('reminders').insert({
@@ -138,7 +143,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Mensagem vazia.' }, { status: 400 });
   }
 
-  // garante que a conversa pertence ao usuário
   const { data: conversation } = await supabase
     .from('ai_conversations')
     .select('id')
@@ -164,32 +168,24 @@ export async function POST(request: Request) {
     .order('created_at', { ascending: true })
     .limit(30);
 
-  if (!process.env.OPENAI_API_KEY) {
-    return NextResponse.json(
-      { error: 'OPENAI_API_KEY não configurada no servidor.' },
-      { status: 500 }
-    );
-  }
-
-  const mensagensParaApi: Array<{ role?: string; content?: unknown; [key: string]: unknown }> = (historico ?? []).map((m) => ({
-    role: m.role === 'assistant' ? 'assistant' : 'user',
+  const mensagensParaApi = (historico ?? []).map((m) => ({
+    role: m.role === 'assistant' ? 'model' as const : 'user' as const,
     content: m.content,
   }));
 
   const acoesRealizadas: string[] = [];
   let textoResposta = '';
 
-  // Até 4 idas e vindas: a IA pode encadear mais de uma ferramenta antes de responder em texto.
   for (let iteracao = 0; iteracao < 4; iteracao++) {
     let data;
     try {
       data = await chamarIA({
         system: SYSTEM_PROMPT,
         tools: TOOLS,
-        messages: mensagensParaApi as never,
+        messages: mensagensParaApi,
       });
     } catch (err) {
-      console.error(err);
+      console.error('[api/ai/chat] Gemini failed', err);
       return NextResponse.json({ error: 'Erro ao falar com a IA.' }, { status: 502 });
     }
 
@@ -200,21 +196,29 @@ export async function POST(request: Request) {
       break;
     }
 
-    mensagensParaApi.push(...(data.output ?? []));
+    const conteudoModelo = extrairConteudoDoModelo(data);
+    if (conteudoModelo) mensagensParaApi.push(conteudoModelo);
 
     const resultados = await Promise.all(
       blocosFerramenta.map(async (bloco) => {
         const resultado = await executarFerramenta(supabase, user.id, bloco.name, bloco.input);
         acoesRealizadas.push(resultado);
         return {
-          type: 'function_call_output',
-          call_id: bloco.callId,
-          output: resultado,
+          role: 'user' as const,
+          content: [
+            {
+              functionResponse: {
+                name: bloco.name,
+                id: bloco.callId || undefined,
+                response: { result: resultado },
+              },
+            },
+          ],
         };
       })
     );
 
-    mensagensParaApi.push({ role: 'user', content: resultados });
+    mensagensParaApi.push(...resultados);
   }
 
   if (!textoResposta && acoesRealizadas.length > 0) {
