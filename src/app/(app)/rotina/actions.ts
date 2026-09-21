@@ -18,12 +18,13 @@ export async function addRoutineActivity(formData:FormData){
   const {supabase,user}=await getUserOrThrow();
   const title=String(formData.get('title')||'').trim();
   if(!title)return;
+  const days=formData.getAll('days_of_week').map(Number).filter(Number.isInteger);
   await supabase.from('routine_activities').insert({
     user_id:user.id,title,
     duration_minutes:Math.max(1,Number(formData.get('duration_minutes')||30)),
     fixed_start:String(formData.get('fixed_start')||'').trim()||null,
     kind:String(formData.get('kind')||'daily')==='task'?'task':'daily',
-    days_of_week:[0,1,2,3,4,5,6]
+    days_of_week:days.length?days:[1,2,3,4,5]
   });
   revalidatePath('/rotina');
 }
