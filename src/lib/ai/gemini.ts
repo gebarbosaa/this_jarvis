@@ -1,5 +1,5 @@
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
-const DEFAULT_MODEL = 'gemini-2.5-flash-lite';
+const DEFAULT_MODEL = 'gemini-3.5-flash-lite';
 
 export type IAInputMessage = {
   role?: 'user' | 'assistant' | 'system';
@@ -24,7 +24,15 @@ type GeminiResponse = {
 };
 
 function getModel() {
-  return process.env.GEMINI_MODEL || DEFAULT_MODEL;
+  const configuredModel = process.env.GEMINI_MODEL?.trim();
+
+  // O modelo antigo foi descontinuado para novos usuários.
+  // Mantemos compatibilidade caso uma variável antiga ainda exista no Vercel.
+  if (!configuredModel || configuredModel === 'gemini-2.5-flash-lite') {
+    return DEFAULT_MODEL;
+  }
+
+  return configuredModel;
 }
 
 function normalizarConteudo(content: unknown): GeminiPart[] {
