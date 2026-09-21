@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { chamarIA, extrairTexto } from './openai';
+import { chamarIA, extrairTexto } from './gemini';
 import { diasDaSemana, toISODate } from '@/lib/date';
 
 export async function gerarPlanoSemanal(
