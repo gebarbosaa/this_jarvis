@@ -8,13 +8,9 @@ import { toggleHabitToday } from '../habitos/actions';
 
 export default async function InicioPage() {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect('/login');
-  }
+  if (!user) redirect('/login');
 
   const today = todayISODate();
 
@@ -32,48 +28,111 @@ export default async function InicioPage() {
   const nome = profile?.display_name?.split(' ')[0] ?? '';
 
   return (
-    <>
-      <header className="mb-6">
-        <p className="text-sm capitalize text-ink-faint">{formatDiaCompleto(today)}</p>
-        <h1 className="font-display text-2xl text-ink">{nome ? `Olá, ${nome}` : 'Olá'}</h1>
+    <div className="space-y-7">
+      <header className="rounded-2xl border border-border bg-gradient-soft px-5 py-5 shadow-elegant sm:px-6 sm:py-6">
+        <p className="text-xs font-bold tracking-[0.12em] text-primary">{formatDiaCompleto(today)}</p>
+        <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1 className="text-balance text-2xl font-extrabold tracking-tight text-ink sm:text-3xl lg:text-4xl">
+              {nome ? `Olá, ${nome}` : 'Olá'}
+            </h1>
+            <p className="mt-1 text-sm text-ink-soft sm:text-base">Sua visão rápida do que precisa de atenção hoje.</p>
+          </div>
+          <Link href="/tarefas" className="rounded-xl border border-primary/40 bg-primary/10 px-4 py-2.5 text-xs font-bold tracking-[0.06em] text-primary transition hover:bg-primary/15">
+            VER TAREFAS
+          </Link>
+        </div>
       </header>
 
       {atrasadas && atrasadas.length > 0 && (
-        <Link href="/tarefas" className="mb-6 block rounded-card border border-clay/40 bg-clay-light px-3 py-2.5 text-sm text-clay">
-          {atrasadas.length === 1 ? `1 tarefa atrasada: "${atrasadas[0].title}"` : `${atrasadas.length} tarefas atrasadas — vale revisar.`}
+        <Link href="/tarefas" className="flex items-center justify-between gap-4 rounded-xl border border-clay/40 bg-clay-light px-4 py-3 text-sm text-clay">
+          <span>{atrasadas.length === 1 ? `1 tarefa atrasada: "${atrasadas[0].title}"` : `${atrasadas.length} tarefas atrasadas — vale revisar.`}</span>
+          <span className="shrink-0 text-xs font-bold">ABRIR →</span>
         </Link>
       )}
 
-      <Section title="Para hoje" href="/tarefas">
-        {(!tasksHoje || tasksHoje.length === 0) && <EmptyState text="Nenhuma tarefa para hoje. 🎉" />}
-        <ul className="flex flex-col gap-2">
-          {tasksHoje?.map((task) => (
-            <li key={task.id} className="flex items-center gap-3 rounded-card border border-border bg-white px-3 py-2.5">
-              <form action={toggleTask}><input type="hidden" name="id" value={task.id} /><input type="hidden" name="current_status" value={task.status} /><button type="submit" aria-label="Concluir tarefa" className="h-4 w-4 shrink-0 rounded-full border-2 border-border" /></form>
-              <span className="truncate text-sm text-ink">{task.title}</span>
-            </li>
-          ))}
-        </ul>
-      </Section>
+      <div className="grid gap-5 xl:grid-cols-2">
+        <Section title="Para hoje" href="/tarefas">
+          {(!tasksHoje || tasksHoje.length === 0) && <EmptyState text="Nenhuma tarefa para hoje. 🎉" />}
+          <ul className="space-y-2">
+            {tasksHoje?.map((task) => (
+              <li key={task.id} className="group flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 transition hover:border-primary/35">
+                <form action={toggleTask}>
+                  <input type="hidden" name="id" value={task.id} />
+                  <input type="hidden" name="current_status" value={task.status} />
+                  <button type="submit" aria-label="Concluir tarefa" className="h-5 w-5 shrink-0 rounded-full border-2 border-border bg-paper transition hover:border-primary hover:bg-primary/10" />
+                </form>
+                <span className="min-w-0 flex-1 truncate text-sm text-ink">{task.title}</span>
+              </li>
+            ))}
+          </ul>
+        </Section>
 
-      <Section title="Hábitos de hoje" href="/habitos">
-        {(!habits || habits.length === 0) && <EmptyState text="Você ainda não tem hábitos." />}
-        <div className="flex flex-wrap gap-2">
-          {habits?.map((habit) => {
-            const done = feitosHoje.has(habit.id);
-            return <form key={habit.id} action={toggleHabitToday}><input type="hidden" name="habit_id" value={habit.id} /><input type="hidden" name="already_done" value={String(done)} /><button type="submit" className={`rounded-full px-3 py-1.5 text-xs font-medium ${done ? 'bg-pine text-white' : 'border border-border bg-white text-ink-soft'}`}>{habit.name}</button></form>;
-          })}
-        </div>
-      </Section>
+        <Section title="Hábitos de hoje" href="/habitos">
+          {(!habits || habits.length === 0) && <EmptyState text="Você ainda não tem hábitos." />}
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {habits?.map((habit) => {
+              const done = feitosHoje.has(habit.id);
+              return (
+                <form key={habit.id} action={toggleHabitToday}>
+                  <input type="hidden" name="habit_id" value={habit.id} />
+                  <input type="hidden" name="already_done" value={String(done)} />
+                  <button type="submit" className={`flex min-h-20 w-full flex-col items-start justify-between rounded-xl border px-3 py-3 text-left text-xs font-bold transition ${done ? 'border-primary/50 bg-primary/12 text-primary' : 'border-border bg-surface text-ink-soft hover:border-primary/35 hover:text-ink'}`}>
+                    <span className="h-2 w-2 rounded-full bg-current opacity-70" />
+                    <span className="line-clamp-2">{habit.name}</span>
+                  </button>
+                </form>
+              );
+            })}
+          </div>
+        </Section>
 
-      <Section title="Próximos lembretes" href="/lembretes">
-        {(!reminders || reminders.length === 0) && <EmptyState text="Nada por vir." />}
-        <ul className="flex flex-col gap-1.5">{reminders?.map((r) => <li key={r.id} className="text-sm text-ink-soft"><span className="text-ink-faint">{new Date(r.remind_at).toLocaleString('pt-BR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>{' '}· {r.title}</li>)}</ul>
-      </Section>
-    </>
+        <Section title="Próximos lembretes" href="/lembretes">
+          {(!reminders || reminders.length === 0) && <EmptyState text="Nada por vir." />}
+          <ul className="space-y-2">
+            {reminders?.map((r) => (
+              <li key={r.id} className="rounded-xl border border-border bg-surface px-4 py-3 text-sm text-ink-soft">
+                <span className="font-semibold text-primary">
+                  {new Date(r.remind_at).toLocaleString('pt-BR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                </span>
+                <span className="mx-2 text-ink-faint">•</span>
+                {r.title}
+              </li>
+            ))}
+          </ul>
+        </Section>
+
+        <section className="rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-6">
+          <p className="section-label">Visão rápida</p>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <Metric label="Tarefas" value={tasksHoje?.length ?? 0} />
+            <Metric label="Hábitos" value={habits?.length ?? 0} />
+            <Metric label="Lembretes" value={reminders?.length ?? 0} />
+            <Metric label="Atrasadas" value={atrasadas?.length ?? 0} alert={Boolean(atrasadas?.length)} />
+          </div>
+        </section>
+      </div>
+    </div>
   );
 }
 
 function Section({ title, href, children }: { title: string; href: string; children: React.ReactNode }) {
-  return <section className="mb-6"><div className="mb-2 flex items-center justify-between"><h2 className="text-sm font-medium text-ink-soft">{title}</h2><Link href={href} className="text-xs text-pine">ver tudo</Link></div>{children}</section>;
+  return (
+    <section className="app-card p-4 sm:p-5">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="section-label">{title}</h2>
+        <Link href={href} className="text-[10px] font-bold tracking-[0.08em] text-primary hover:underline">VER TUDO</Link>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Metric({ label, value, alert = false }: { label: string; value: number; alert?: boolean }) {
+  return (
+    <div className={`rounded-xl border px-3 py-3 ${alert ? 'border-clay/40 bg-clay-light/40' : 'border-border bg-paper/50'}`}>
+      <p className="text-[10px] font-bold tracking-[0.08em] text-ink-faint">{label}</p>
+      <p className={`mt-1 text-2xl font-extrabold ${alert ? 'text-clay' : 'text-ink'}`}>{value}</p>
+    </div>
+  );
 }
