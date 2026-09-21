@@ -5,18 +5,12 @@ import { createHabit } from './actions';
 
 export function NewHabitForm() {
   const formRef = useRef<HTMLFormElement>(null);
-
   return (
-    <form
-      ref={formRef}
-      action={async (formData) => {
-        formRef.current?.reset();
-        await createHabit(formData);
-      }}
-      className="mb-6 flex items-center gap-2 rounded-card border border-border bg-white p-3"
-    >
-      <input type="text" name="name" placeholder="Novo hábito, ex: Beber água" required className="flex-1 bg-transparent px-1 py-1 text-ink outline-none placeholder:text-ink-faint" />
-      <button type="submit" className="rounded-md bg-pine px-3 py-1.5 text-xs font-medium text-white">Adicionar</button>
+    <form ref={formRef} action={async (formData) => { formRef.current?.reset(); await createHabit(formData); }} className="form-shell">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row">
+        <input type="text" name="name" placeholder="Novo hábito, ex: Beber água" required className="min-w-0 flex-1 rounded-xl border border-border bg-paper px-3 py-2.5 text-sm text-ink outline-none placeholder:text-ink-faint" />
+        <button type="submit" className="primary-button w-full sm:w-auto">Adicionar</button>
+      </div>
     </form>
   );
 }
