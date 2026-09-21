@@ -5,55 +5,24 @@ import { updateProfile } from './actions';
 
 export default async function AjustesPage() {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('display_name, timezone')
-    .eq('id', user!.id)
-    .single();
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: profile } = await supabase.from('profiles').select('display_name, timezone').eq('id', user!.id).single();
 
   return (
-    <>
-      <PageHeader title="Ajustes" />
-
-      <form action={updateProfile} className="flex flex-col gap-4 rounded-card border border-border bg-white p-4">
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm text-ink-soft">Nome</span>
-          <input
-            type="text"
-            name="display_name"
-            defaultValue={profile?.display_name ?? ''}
-            className="rounded-md border border-border bg-paper px-3 py-2 text-ink outline-none focus:border-pine"
-          />
-        </label>
-
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm text-ink-soft">E-mail</span>
-          <input
-            type="email"
-            value={user?.email ?? ''}
-            disabled
-            className="rounded-md border border-border bg-surface px-3 py-2 text-ink-faint outline-none"
-          />
-        </label>
-
-        <button type="submit" className="self-start rounded-md bg-pine px-4 py-2 text-sm font-medium text-white">
-          Salvar
-        </button>
+    <div className="page-stack">
+      <PageHeader title="Ajustes" subtitle="Personalize seus dados e o acesso à sua Secretária." />
+      <form action={updateProfile} className="app-card grid gap-5 p-4 sm:p-5 lg:max-w-3xl">
+        <label className="grid gap-2"><span className="section-label">Nome</span><input type="text" name="display_name" defaultValue={profile?.display_name ?? ''} className="field w-full" /></label>
+        <label className="grid gap-2"><span className="section-label">E-mail</span><input type="email" value={user?.email ?? ''} disabled className="field w-full opacity-60" /></label>
+        <button type="submit" className="primary-button w-full sm:w-fit">Salvar alterações</button>
       </form>
-
-      <div className="mt-6 rounded-card border border-dashed border-border p-4 text-sm text-ink-faint">
-        A integração com o Harmony Hub vai aparecer aqui quando estiver pronta.
+      <div className="app-card max-w-3xl p-4 sm:p-5">
+        <p className="section-label">Harmony Hub</p>
+        <p className="mt-2 text-sm leading-6 text-ink-soft">A integração com o Harmony Hub vai aparecer aqui quando estiver pronta.</p>
       </div>
-
-      <form action={signOut} className="mt-6">
-        <button type="submit" className="text-sm font-medium text-clay">
-          Sair da conta
-        </button>
+      <form action={signOut} className="max-w-3xl">
+        <button type="submit" className="secondary-button text-clay">Sair da conta</button>
       </form>
-    </>
+    </div>
   );
 }
