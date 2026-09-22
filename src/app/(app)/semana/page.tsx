@@ -53,7 +53,9 @@ export default async function SemanaPage() {
         {dias.map((dia) => {
           const dataISO = toISODate(dia);
           const tarefasDoDia = (tasks ?? []).filter((t) => t.due_date === dataISO);
-          const eventosDoDia = (events ?? []).filter((e) =>\n            new Date(e.start_at).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) === dataISO\n          );
+          const eventosDoDia = (events ?? []).filter((e) =>
+            new Date(e.start_at).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) === dataISO
+          );
           const lembretesDoDia = (reminders ?? []).filter((r) => new Date(r.remind_at).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) === dataISO);
           const isHoje = dataISO === hoje;
           const temItens = tarefasDoDia.length > 0 || eventosDoDia.length > 0 || lembretesDoDia.length > 0;
