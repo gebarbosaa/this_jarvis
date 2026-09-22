@@ -48,7 +48,8 @@ export default async function RotinaPage() {
   const {data:{user}}=await supabase.auth.getUser();
   if(!user)return null;
   const today = new Date();
-  const dayOfWeek = today.getDay();\n  const [{data:settings},{data:activities}]=await Promise.all([
+  const dayOfWeek = today.getDay();
+  const [{data:settings},{data:activities}]=await Promise.all([
     supabase.from('routine_settings').select('day_start,day_end').eq('user_id',user.id).maybeSingle(),
     supabase.from('routine_activities').select('id,title,duration_minutes,fixed_start,kind,days_of_week').eq('user_id',user.id).eq('active',true).order('created_at',{ascending:true}),
   ]);
