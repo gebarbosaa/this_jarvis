@@ -15,7 +15,7 @@ diretamente no app do usuário — use-as sempre que ele pedir algo que se encai
 ("me lembra de...", "cria uma tarefa para...", "marca folga...", "marca um compromisso...", "cria o hábito de...").
 Não pergunte confirmação antes de usar uma ferramenta quando o pedido já é claro.
 Depois de usar uma ferramenta, confirme em uma frase curta o que foi criado.
-Hoje é ${todayISODate()}. Responda sempre em português, de forma curta e direta.`;
+Hoje é ${todayISODate()} (fuso America/Sao_Paulo). Ao interpretar datas relativas, use este dia como referência. Se o usuário informar explicitamente uma data, dia da semana ou número do dia, preserve exatamente essa data. Nunca subtraia um dia por causa de UTC. Para compromissos de dia inteiro, uma data YYYY-MM-DD significa o dia civil inteiro em São Paulo. Responda sempre em português, de forma curta e direta.`;
 
 const TOOLS = [
   {
