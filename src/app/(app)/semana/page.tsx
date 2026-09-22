@@ -26,8 +26,8 @@ export default async function SemanaPage() {
       .from('calendar_events')
       .select('*')
       .eq('user_id', user!.id)
-      .gte('start_at', `${inicio}T00:00:00`)
-      .lte('start_at', `${fim}T23:59:59`),
+      .gte('start_at', `${inicio}T00:00:00-03:00`)
+      .lte('start_at', `${fim}T23:59:59-03:00`),
     supabase
       .from('reminders')
       .select('*')
@@ -53,7 +53,7 @@ export default async function SemanaPage() {
         {dias.map((dia) => {
           const dataISO = toISODate(dia);
           const tarefasDoDia = (tasks ?? []).filter((t) => t.due_date === dataISO);
-          const eventosDoDia = (events ?? []).filter((e) => e.start_at.startsWith(dataISO));
+          const eventosDoDia = (events ?? []).filter((e) =>\n            new Date(e.start_at).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) === dataISO\n          );
           const lembretesDoDia = (reminders ?? []).filter((r) => new Date(r.remind_at).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) === dataISO);
           const isHoje = dataISO === hoje;
           const temItens = tarefasDoDia.length > 0 || eventosDoDia.length > 0 || lembretesDoDia.length > 0;
