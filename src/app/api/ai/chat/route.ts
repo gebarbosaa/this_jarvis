@@ -97,7 +97,7 @@ async function executarFerramenta(
   supabase: ReturnType<typeof createClient>,
   userId: string,
   name: string,
-  input: Record<string, string>
+  input: Record<string, unknown>
 ): Promise<string> {
   switch (name) {
     case 'criar_tarefa': {
@@ -130,24 +130,24 @@ async function executarFerramenta(
       return `Lembrete "${input.title}" criado.`;
     }
     case 'criar_compromisso': {
-      const startAt = new Date(input.start_at);
+      const startAt = new Date(String(input.start_at));
       if (Number.isNaN(startAt.getTime())) {
         return 'Não consegui interpretar a data do compromisso.';
       }
       const payload = {
         user_id: userId,
-        title: input.title,
+        title: String(input.title ?? ''),
         start_at: startAt.toISOString(),
-        end_at: input.end_at ? new Date(input.end_at).toISOString() : null,
-        all_day: input.all_day === 'true',
-        description: input.description || null,
+        end_at: input.end_at ? new Date(String(input.end_at)).toISOString() : null,
+        all_day: input.all_day === true || input.all_day === 'true',
+        description: input.description ? String(input.description) : null,
       };
       const { error } = await supabase.from('calendar_events').insert(payload);
       if (error) {
         console.error('[api/ai/chat] calendar event insert failed', error);
         return 'Não consegui salvar o compromisso.';
       }
-      return 'Compromisso "' + input.title + '" marcado.';
+      return 'Compromisso "' + String(input.title ?? '') + '" marcado.';
     }
     case 'criar_objetivo': {
       await supabase.from('goals').insert({
@@ -241,7 +241,7 @@ export async function POST(request: Request) {
 
     const resultados = await Promise.all(
       blocosFerramenta.map(async (bloco) => {
-        const resultado = await executarFerramenta(supabase, user.id, bloco.name, bloco.input);
+        const resultado = await executarFerramenta(supabase, user.id, bloco.name, bloco.input as Record<string, unknown>);
         acoesRealizadas.push(resultado);
         return {
           role: 'user' as const,
