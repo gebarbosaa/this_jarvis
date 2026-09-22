@@ -10,9 +10,9 @@ import {
 } from '@/lib/ai/gemini';
 
 const SYSTEM_PROMPT = `Você é a Secretária, uma assistente pessoal organizada, direta e gentil.
-Você tem ferramentas reais para criar tarefas, hábitos, notas, lembretes e objetivos
+Você tem ferramentas reais para criar tarefas, hábitos, notas, lembretes, compromissos e objetivos
 diretamente no app do usuário — use-as sempre que ele pedir algo que se encaixe
-("me lembra de...", "cria uma tarefa para...", "quero criar o hábito de...").
+("me lembra de...", "cria uma tarefa para...", "marca folga...", "marca um compromisso...", "cria o hábito de...").
 Não pergunte confirmação antes de usar uma ferramenta quando o pedido já é claro.
 Depois de usar uma ferramenta, confirme em uma frase curta o que foi criado.
 Hoje é ${todayISODate()}. Responda sempre em português, de forma curta e direta.`;
@@ -65,6 +65,21 @@ const TOOLS = [
     },
   },
   {
+    name: 'criar_compromisso',
+    description: 'Cria um compromisso/evento na Semana. Use para folgas, encontros, compromissos, eventos e qualquer coisa que o usuário queira marcar em uma data. Para folga ou evento de dia inteiro, use all_day=true e start_at no início da data.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Nome do compromisso' },
+        start_at: { type: 'string', description: 'Data e hora no formato ISO 8601. Para dia inteiro, use a data com T00:00:00.' },
+        end_at: { type: 'string', description: 'Data e hora final em ISO 8601, se houver' },
+        all_day: { type: 'boolean', description: 'true para folga ou evento de dia inteiro' },
+        description: { type: 'string', description: 'Detalhes do compromisso, se houver' },
+      },
+      required: ['title', 'start_at'],
+    },
+  },
+  {
     name: 'criar_objetivo',
     description: 'Cria um novo objetivo/meta de longo prazo para o usuário.',
     input_schema: {
@@ -113,6 +128,26 @@ async function executarFerramenta(
         remind_at: new Date(input.remind_at).toISOString(),
       });
       return `Lembrete "${input.title}" criado.`;
+    }
+    case 'criar_compromisso': {
+      const startAt = new Date(input.start_at);
+      if (Number.isNaN(startAt.getTime())) {
+        return 'Não consegui interpretar a data do compromisso.';
+      }
+      const payload = {
+        user_id: userId,
+        title: input.title,
+        start_at: startAt.toISOString(),
+        end_at: input.end_at ? new Date(input.end_at).toISOString() : null,
+        all_day: input.all_day === 'true' || input.all_day === true,
+        description: input.description || null,
+      };
+      const { error } = await supabase.from('calendar_events').insert(payload);
+      if (error) {
+        console.error('[api/ai/chat] calendar event insert failed', error);
+        return 'Não consegui salvar o compromisso.';
+      }
+      return 'Compromisso "' + input.title + '" marcado.';
     }
     case 'criar_objetivo': {
       await supabase.from('goals').insert({
