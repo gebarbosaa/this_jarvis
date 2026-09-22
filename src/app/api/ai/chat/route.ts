@@ -130,16 +130,32 @@ async function executarFerramenta(
       return `Lembrete "${input.title}" criado.`;
     }
     case 'criar_compromisso': {
-      const startAt = new Date(String(input.start_at));
-      if (Number.isNaN(startAt.getTime())) {
+      const allDay = input.all_day === true || input.all_day === 'true';
+      const parseSaoPauloDateTime = (value: unknown) => {
+        const raw = String(value ?? '').trim();
+        if (!raw) return null;
+        // Datas vindas da IA sem fuso devem ser interpretadas no horário de São Paulo,
+        // e não como UTC (que faria uma folga de 23/09 aparecer como 22/09).
+        const normalized = /(?:Z|[+-]\\d{2}:?\\d{2})$/.test(raw)
+          ? raw
+          : /^\\d{4}-\\d{2}-\\d{2}$/.test(raw)
+            ? raw + 'T00:00:00-03:00'
+            : raw + '-03:00';
+        const parsed = new Date(normalized);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+      };
+
+      const startAt = parseSaoPauloDateTime(input.start_at);
+      if (!startAt) {
         return 'Não consegui interpretar a data do compromisso.';
       }
+      const endAt = input.end_at ? parseSaoPauloDateTime(input.end_at) : null;
       const payload = {
         user_id: userId,
         title: String(input.title ?? ''),
         start_at: startAt.toISOString(),
-        end_at: input.end_at ? new Date(String(input.end_at)).toISOString() : null,
-        all_day: input.all_day === true || input.all_day === 'true',
+        end_at: endAt ? endAt.toISOString() : null,
+        all_day: allDay,
         description: input.description ? String(input.description) : null,
       };
       const { error } = await supabase.from('calendar_events').insert(payload);
