@@ -139,7 +139,7 @@ async function executarFerramenta(
         title: input.title,
         start_at: startAt.toISOString(),
         end_at: input.end_at ? new Date(input.end_at).toISOString() : null,
-        all_day: input.all_day === 'true' || input.all_day === true,
+        all_day: input.all_day === 'true',
         description: input.description || null,
       };
       const { error } = await supabase.from('calendar_events').insert(payload);
