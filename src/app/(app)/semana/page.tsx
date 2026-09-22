@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { diasDaSemana, toISODate, formatDiaCurto, todayISODate } from '@/lib/date';
+
+const TIME_ZONE = 'America/Sao_Paulo';
 import { WeeklyPlanCard } from './WeeklyPlanCard';
 
 export default async function SemanaPage() {
@@ -82,7 +84,7 @@ export default async function SemanaPage() {
                     <span className="text-ink-faint">
                       {e.all_day
                         ? 'Dia todo'
-                        : new Date(e.start_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        : new Date(e.start_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: TIME_ZONE })}
                     </span>{' '}
                     · {e.title}
                   </li>
@@ -90,7 +92,7 @@ export default async function SemanaPage() {
                 {lembretesDoDia.map((r) => (
                   <li key={`reminder-${r.id}`} className="text-sm text-ink">
                     <span className="text-ink-faint">
-                      {new Date(r.remind_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })}
+                      {new Date(r.remind_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: TIME_ZONE })}
                     </span>{' '}
                     · 🔔 {r.title}
                   </li>
