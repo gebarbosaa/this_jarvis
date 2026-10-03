@@ -11,7 +11,7 @@ export async function POST() {
   const code = randomBytes(4).toString('hex').toUpperCase();
   const token = randomBytes(32).toString('hex');
   const expires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-  const admin = createAdminClient();
+  const admin = createAdminClient() as any;
 
   const { error: upsertError } = await admin.from('integrations').upsert({
     user_id: user.id,
