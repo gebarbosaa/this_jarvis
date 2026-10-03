@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     const harmonyUserId = String(body.harmony_user_id ?? '').trim();
     if (!/^[A-F0-9]{8}$/.test(code) || !householdId) return NextResponse.json({ error: 'Código inválido.' }, { status: 400, headers: cors });
 
-    const admin = createAdminClient();
+    const admin = createAdminClient() as any;
     const { data: rows, error } = await admin.from('integrations').select('id,user_id,metadata').eq('provider','harmony_hub').eq('status','pending');
     if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: cors });
 
