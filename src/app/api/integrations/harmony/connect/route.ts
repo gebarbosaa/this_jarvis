@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     const { data: rows, error } = await admin.from('integrations').select('id,user_id,metadata').eq('provider','harmony_hub').eq('status','pending');
     if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: cors });
 
-    const match = (rows ?? []).find((row) => {
+    const match = (rows ?? []).find((row: { id: string; user_id: string; metadata: Record<string, unknown> | null }) => {
       const m = (row.metadata ?? {}) as Record<string, unknown>;
       return m.pairing_code === code && typeof m.pairing_expires_at === 'string' && new Date(m.pairing_expires_at).getTime() > Date.now();
     });

@@ -23,7 +23,7 @@ com arquitetura já preparada para conversar com o Harmony Hub no futuro.
 4. Para alinhar instalações existentes e ativar as correções recentes, rode também
    `supabase/migrations/20261011050000_repair_missing_core_tables.sql` no SQL Editor.
    A migração é aditiva e idempotente: não apaga os registros existentes.
-4. (Opcional, recomendado) Em **Authentication → Providers**, confirme que
+5. (Opcional, recomendado) Em **Authentication → Providers**, confirme que
    "Email" está habilitado. Por padrão o Supabase exige confirmação de e-mail —
    se quiser testar mais rápido em desenvolvimento, você pode desativar essa
    confirmação em **Authentication → Providers → Email**.

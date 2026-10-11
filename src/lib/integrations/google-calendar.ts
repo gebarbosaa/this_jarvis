@@ -31,7 +31,7 @@ export function decryptToken(value: string) {
 }
 
 export function googleRedirectUri() {
-  return `${env('NEXT_PUBLIC_APP_URL').replace(/\\/$/, '')}/api/integrations/google-calendar/callback`;
+  return `${env('NEXT_PUBLIC_APP_URL').replace(/\/$/, '')}/api/integrations/google-calendar/callback`;
 }
 
 export function googleAuthUrl(state: string) {
