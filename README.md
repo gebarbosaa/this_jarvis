@@ -9,7 +9,7 @@ com arquitetura já preparada para conversar com o Harmony Hub no futuro.
 - Tailwind CSS
 - Supabase (Auth + Postgres + RLS)
 - Deploy: Vercel
-- IA: API da Anthropic, chamada a partir de uma Route Handler no servidor
+- IA: API do Google Gemini, chamada a partir de Route Handlers no servidor
 
 ## 1. Criar o projeto no Supabase
 
@@ -33,7 +33,7 @@ cp .env.example .env.local
 ```
 
 Preencha o `.env.local` com as duas chaves do Supabase e, se quiser testar a
-Secretária IA, sua `ANTHROPIC_API_KEY` (https://console.anthropic.com).
+Secretária IA, sua `GEMINI_API_KEY` (https://aistudio.google.com/apikey).
 
 ```bash
 npm run dev
@@ -50,7 +50,7 @@ trigger do banco).
 3. Em **Environment Variables**, adicione as mesmas variáveis do `.env.local`:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `ANTHROPIC_API_KEY`
+   - `GEMINI_API_KEY` (necessária para o chat, os planos semanais e o resumo diário)
    - `SUPABASE_SERVICE_ROLE_KEY` (em Project Settings → API → `service_role`, no Supabase — necessária só para o cron)
    - `CRON_SECRET` (qualquer valor aleatório, ex: `openssl rand -hex 32`)
 4. Deploy. A cada `git push` a Vercel gera um novo deploy automaticamente.
