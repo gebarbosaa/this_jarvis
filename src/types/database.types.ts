@@ -7,6 +7,8 @@ export type TaskPriority = 'low' | 'medium' | 'high';
 export type HabitFrequency = 'daily' | 'weekly' | 'custom';
 export type GoalStatus = 'active' | 'paused' | 'done' | 'abandoned';
 export type AiMessageRole = 'user' | 'assistant' | 'system';
+export type IntegrationProvider = 'harmony_hub';
+export type IntegrationStatus = 'pending' | 'connected' | 'revoked' | 'error';
 
 export interface Database {
   public: {
@@ -143,6 +145,10 @@ export interface Database {
           related_task_id: string | null;
           dismissed_at: string | null;
           created_at: string;
+          google_event_id: string | null;
+          google_calendar_id: string | null;
+          google_synced_at: string | null;
+          source: string;
         };
         Insert: Partial<Database['public']['Tables']['reminders']['Row']> & {
           user_id: string;
@@ -221,6 +227,49 @@ export interface Database {
           content: string;
         };
         Update: Partial<Database['public']['Tables']['ai_messages']['Row']>;
+        Relationships: [];
+      };
+
+      routines: {
+        Row: { id: string; user_id: string; name: string; created_at: string };
+        Insert: Partial<Database['public']['Tables']['routines']['Row']> & { user_id: string; name: string };
+        Update: Partial<Database['public']['Tables']['routines']['Row']>;
+        Relationships: [];
+      };
+      routine_items: {
+        Row: { id: string; routine_id: string; user_id: string; title: string; order_index: number; created_at: string };
+        Insert: Partial<Database['public']['Tables']['routine_items']['Row']> & { routine_id: string; user_id: string; title: string };
+        Update: Partial<Database['public']['Tables']['routine_items']['Row']>;
+        Relationships: [];
+      };
+      routine_settings: {
+        Row: { user_id: string; day_start: string; day_end: string; updated_at: string };
+        Insert: Partial<Database['public']['Tables']['routine_settings']['Row']> & { user_id: string };
+        Update: Partial<Database['public']['Tables']['routine_settings']['Row']>;
+        Relationships: [];
+      };
+      routine_activities: {
+        Row: { id: string; user_id: string; title: string; duration_minutes: number; fixed_start: string | null; days_of_week: number[]; kind: 'daily' | 'task'; active: boolean; created_at: string };
+        Insert: Partial<Database['public']['Tables']['routine_activities']['Row']> & { user_id: string; title: string };
+        Update: Partial<Database['public']['Tables']['routine_activities']['Row']>;
+        Relationships: [];
+      };
+      google_calendar_connections: {
+        Row: { id: string; user_id: string; calendar_id: string; google_email: string | null; access_token_encrypted: string | null; refresh_token_encrypted: string; expires_at: string | null; created_at: string; updated_at: string };
+        Insert: Partial<Database['public']['Tables']['google_calendar_connections']['Row']> & { user_id: string; refresh_token_encrypted: string };
+        Update: Partial<Database['public']['Tables']['google_calendar_connections']['Row']>;
+        Relationships: [];
+      };
+      integrations: {
+        Row: { id: string; user_id: string; provider: IntegrationProvider; status: IntegrationStatus; external_account_id: string | null; metadata: Record<string, unknown>; connected_at: string | null; created_at: string; updated_at: string };
+        Insert: Partial<Database['public']['Tables']['integrations']['Row']> & { user_id: string; provider: IntegrationProvider };
+        Update: Partial<Database['public']['Tables']['integrations']['Row']>;
+        Relationships: [];
+      };
+      integration_permissions: {
+        Row: { id: string; integration_id: string; user_id: string; scope: string; granted_at: string; revoked_at: string | null };
+        Insert: Partial<Database['public']['Tables']['integration_permissions']['Row']> & { integration_id: string; user_id: string; scope: string };
+        Update: Partial<Database['public']['Tables']['integration_permissions']['Row']>;
         Relationships: [];
       };
     };
