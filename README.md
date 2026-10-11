@@ -18,8 +18,11 @@ com arquitetura já preparada para conversar com o Harmony Hub no futuro.
    - `Project URL` → vai virar `NEXT_PUBLIC_SUPABASE_URL`
    - `anon public key` → vai virar `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 3. Vá em **SQL Editor**, cole o conteúdo de `supabase/schema.sql` inteiro e rode.
-   Isso cria todas as tabelas, os índices e as políticas de RLS (cada usuário só
-   enxerga os próprios dados).
+   Isso cria as tabelas principais, rotinas, conexões de calendário, índices e políticas
+   RLS (cada usuário só enxerga os próprios dados).
+4. Para alinhar instalações existentes e ativar as correções recentes, rode também
+   `supabase/migrations/20261011050000_repair_missing_core_tables.sql` no SQL Editor.
+   A migração é aditiva e idempotente: não apaga os registros existentes.
 4. (Opcional, recomendado) Em **Authentication → Providers**, confirme que
    "Email" está habilitado. Por padrão o Supabase exige confirmação de e-mail —
    se quiser testar mais rápido em desenvolvimento, você pode desativar essa

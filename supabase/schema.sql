@@ -13,12 +13,12 @@ create extension if not exists "pgcrypto";
 -- Função utilitária: mantém updated_at sempre atualizado
 -- ----------------------------------------------------------------------------
 create or replace function public.set_updated_at()
-returns trigger as $$
+returns trigger language plpgsql set search_path = pg_catalog as $func$
 begin
   new.updated_at = now();
   return new;
 end;
-$$ language plpgsql;
+$func$;
 
 -- ----------------------------------------------------------------------------
 -- profiles — um registro por usuário autenticado
@@ -346,6 +346,99 @@ create table public.integration_permissions (
 alter table public.integration_permissions enable row level security;
 create policy "integration_permissions_all_own" on public.integration_permissions
   for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+
+-- ----------------------------------------------------------------------------
+-- Rotinas pessoais (usadas pela tela /rotina)
+-- ----------------------------------------------------------------------------
+create table public.routines (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  name text not null,
+  created_at timestamptz not null default now()
+);
+create index routines_user_id_idx on public.routines(user_id);
+alter table public.routines enable row level security;
+create policy routines_own on public.routines for all to authenticated
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create table public.routine_items (
+  id uuid primary key default gen_random_uuid(),
+  routine_id uuid not null references public.routines(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  title text not null,
+  order_index integer not null default 0,
+  created_at timestamptz not null default now()
+);
+create index routine_items_routine_id_idx on public.routine_items(routine_id);
+alter table public.routine_items enable row level security;
+create policy routine_items_own on public.routine_items for all to authenticated
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create table public.routine_settings (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  day_start time not null default '08:00',
+  day_end time not null default '22:00',
+  updated_at timestamptz not null default now()
+);
+alter table public.routine_settings enable row level security;
+create policy routine_settings_own on public.routine_settings for all to authenticated
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create table public.routine_activities (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  title text not null,
+  duration_minutes integer not null default 30 check (duration_minutes > 0),
+  fixed_start time,
+  days_of_week integer[] not null default '{0,1,2,3,4,5,6}',
+  kind text not null default 'daily' check (kind in ('daily','task')),
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+create index routine_activities_user_id_idx on public.routine_activities(user_id);
+alter table public.routine_activities enable row level security;
+create policy routine_activities_own on public.routine_activities for all to authenticated
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Google Calendar token storage. Tokens are encrypted by the server before saving.
+create table public.google_calendar_connections (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null unique references auth.users(id) on delete cascade,
+  calendar_id text not null default 'primary',
+  google_email text,
+  access_token_encrypted text,
+  refresh_token_encrypted text not null,
+  expires_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.google_calendar_connections enable row level security;
+create policy google_calendar_connections_select_own on public.google_calendar_connections
+  for select to authenticated using (auth.uid() = user_id);
+create policy google_calendar_connections_insert_own on public.google_calendar_connections
+  for insert to authenticated with check (auth.uid() = user_id);
+create policy google_calendar_connections_update_own on public.google_calendar_connections
+  for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy google_calendar_connections_delete_own on public.google_calendar_connections
+  for delete to authenticated using (auth.uid() = user_id);
+
+-- Keep conversation ordering aligned with actual chat activity.
+create or replace function public.touch_ai_conversation_on_message()
+returns trigger language plpgsql set search_path = pg_catalog as $func$
+begin
+  update public.ai_conversations
+  set updated_at = now()
+  where id = new.conversation_id and user_id = new.user_id;
+  return new;
+end;
+$func$;
+create trigger ai_messages_touch_conversation
+  after insert on public.ai_messages
+  for each row execute function public.touch_ai_conversation_on_message();
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+revoke execute on function public.touch_ai_conversation_on_message() from public, anon, authenticated;
+grant select, insert, update, delete on public.routines, public.routine_items, public.routine_settings, public.routine_activities, public.google_calendar_connections to authenticated;
 
 -- ============================================================================
 -- Fim do schema inicial.
