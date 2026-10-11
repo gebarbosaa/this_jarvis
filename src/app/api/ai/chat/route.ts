@@ -153,15 +153,17 @@ async function executarFerramenta(
       return `Lembrete "${String(input.title).trim()}" criado.`;
     }
     case 'criar_compromisso': {
+      const title = String(input.title ?? '').trim();
+      if (!title) return 'Não consegui salvar o compromisso porque o título está vazio.';
       const allDay = input.all_day === true || input.all_day === 'true';
       const parseSaoPauloDateTime = (value: unknown) => {
         const raw = String(value ?? '').trim();
         if (!raw) return null;
         // Datas vindas da IA sem fuso devem ser interpretadas no horário de São Paulo,
         // e não como UTC (que faria uma folga de 23/09 aparecer como 22/09).
-        const normalized = /(?:Z|[+-]\\d{2}:?\\d{2})$/.test(raw)
+        const normalized = /(?:Z|[+-]\d{2}:?\d{2})$/.test(raw)
           ? raw
-          : /^\\d{4}-\\d{2}-\\d{2}$/.test(raw)
+          : /^\d{4}-\d{2}-\d{2}$/.test(raw)
             ? raw + 'T00:00:00-03:00'
             : raw + '-03:00';
         const parsed = new Date(normalized);
@@ -173,9 +175,11 @@ async function executarFerramenta(
         return 'Não consegui interpretar a data do compromisso.';
       }
       const endAt = input.end_at ? parseSaoPauloDateTime(input.end_at) : null;
+      if (input.end_at && !endAt) return 'Não consegui interpretar a data final do compromisso.';
+      if (endAt && endAt.getTime() < startAt.getTime()) return 'A data final do compromisso não pode ser anterior à inicial.';
       const payload = {
         user_id: userId,
-        title: String(input.title ?? ''),
+        title,
         start_at: startAt.toISOString(),
         end_at: endAt ? endAt.toISOString() : null,
         all_day: allDay,
@@ -215,10 +219,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 });
   }
 
-  const { conversationId, message } = await request.json();
+  let body: { conversationId?: unknown; message?: unknown };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Corpo da requisição inválido.' }, { status: 400 });
+  }
 
-  if (!conversationId || !message?.trim()) {
-    return NextResponse.json({ error: 'Mensagem vazia.' }, { status: 400 });
+  const conversationId = typeof body.conversationId === 'string' ? body.conversationId : '';
+  const message = typeof body.message === 'string' ? body.message.trim() : '';
+  if (!conversationId || !message) {
+    return NextResponse.json({ error: 'Informe uma conversa e uma mensagem.' }, { status: 400 });
+  }
+  if (message.length > 4000) {
+    return NextResponse.json({ error: 'A mensagem deve ter no máximo 4.000 caracteres.' }, { status: 413 });
   }
 
   const { data: conversation } = await supabase
@@ -232,21 +246,30 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Conversa inválida.' }, { status: 404 });
   }
 
-  await supabase.from('ai_messages').insert({
+  const { error: erroMensagemUsuario } = await supabase.from('ai_messages').insert({
     conversation_id: conversationId,
     user_id: user.id,
     role: 'user',
     content: message,
   });
+  if (erroMensagemUsuario) {
+    console.error('[api/ai/chat] user message insert failed', erroMensagemUsuario);
+    return NextResponse.json({ error: 'Não foi possível salvar sua mensagem.' }, { status: 500 });
+  }
 
-  const { data: historico } = await supabase
+  const { data: historico, error: erroHistorico } = await supabase
     .from('ai_messages')
     .select('role, content')
     .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: true })
+    .order('created_at', { ascending: false })
     .limit(30);
 
-  const mensagensParaApi: Array<{ role?: 'user' | 'assistant'; content?: unknown }> = (historico ?? []).map((m) => ({
+  if (erroHistorico) {
+    console.error('[api/ai/chat] history fetch failed', erroHistorico);
+    return NextResponse.json({ error: 'Não foi possível carregar o histórico da conversa.' }, { status: 500 });
+  }
+
+  const mensagensParaApi: Array<{ role?: 'user' | 'assistant'; content?: unknown }> = (historico ?? []).reverse().map((m) => ({
     role: m.role === 'assistant' ? 'assistant' as const : 'user' as const,
     content: m.content,
   }));
@@ -314,12 +337,16 @@ export async function POST(request: Request) {
     );
   }
 
-  await supabase.from('ai_messages').insert({
+  const { error: erroMensagemAssistente } = await supabase.from('ai_messages').insert({
     conversation_id: conversationId,
     user_id: user.id,
     role: 'assistant',
     content: textoResposta,
   });
+  if (erroMensagemAssistente) {
+    console.error('[api/ai/chat] assistant message insert failed', erroMensagemAssistente);
+    return NextResponse.json({ error: 'A resposta foi gerada, mas não foi possível salvá-la.' }, { status: 500 });
+  }
 
   return NextResponse.json({ reply: textoResposta, acoes: acoesRealizadas });
 }

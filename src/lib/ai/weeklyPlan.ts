@@ -10,7 +10,7 @@ export async function gerarPlanoSemanal(
   const inicio = toISODate(dias[0]);
   const fim = toISODate(dias[6]);
 
-  const [{ data: tasks }, { data: habits }, { data: goals }, { data: events }] = await Promise.all([
+  const [tasksResult, habitsResult, goalsResult, eventsResult] = await Promise.all([
     supabase
       .from('tasks')
       .select('title, due_date, priority, status')
@@ -24,11 +24,22 @@ export async function gerarPlanoSemanal(
       .from('calendar_events')
       .select('title, start_at')
       .eq('user_id', userId)
-      .gte('start_at', `${inicio}T00:00:00`)
-      .lte('start_at', `${fim}T23:59:59`),
+      .gte('start_at', `${inicio}T00:00:00-03:00`)
+      .lte('start_at', `${fim}T23:59:59.999-03:00`),
   ]);
 
-  const contexto = JSON.stringify({ tarefas: tasks, habitos: habits, objetivos: goals, eventos: events });
+  const erroConsulta = [tasksResult.error, habitsResult.error, goalsResult.error, eventsResult.error].find(Boolean);
+  if (erroConsulta) {
+    console.error('[weekly-plan] Falha ao consultar dados da semana', erroConsulta);
+    throw new Error('Não foi possível carregar todos os dados para o plano semanal.');
+  }
+
+  const contexto = JSON.stringify({
+    tarefas: tasksResult.data ?? [],
+    habitos: habitsResult.data ?? [],
+    objetivos: goalsResult.data ?? [],
+    eventos: eventsResult.data ?? [],
+  });
 
   const data = await chamarIA({
     maxTokens: 500,
@@ -54,7 +65,7 @@ export async function gerarPlanoSemanal(
   const summary = plano.summary ?? '';
   const focus = plano.focus ?? '';
 
-  await supabase.from('weekly_plans').upsert(
+  const { error: erroSalvamento } = await supabase.from('weekly_plans').upsert(
     {
       user_id: userId,
       week_start_date: inicio,
@@ -64,6 +75,11 @@ export async function gerarPlanoSemanal(
     },
     { onConflict: 'user_id,week_start_date' }
   );
+
+  if (erroSalvamento) {
+    console.error('[weekly-plan] Falha ao salvar o plano semanal', erroSalvamento);
+    throw new Error('Não foi possível salvar o plano semanal.');
+  }
 
   return { summary, focus };
 }
