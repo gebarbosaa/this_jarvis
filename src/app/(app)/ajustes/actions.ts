@@ -12,7 +12,9 @@ export async function updateProfile(formData: FormData) {
 
   const display_name = String(formData.get('display_name') ?? '').trim();
 
-  const { error } = await supabase.from('profiles').update({ display_name }).eq('id', user.id);
+  // Supabase JS 2.45's generic schema typing infers `never` for this generated
+  // table Update shape. Keep the payload narrowly scoped to this one known column.
+  const { error } = await supabase.from('profiles').update({ display_name } as never).eq('id', user.id);
   if (error) {
     console.error('[ajustes] Falha ao atualizar perfil', error);
     throw new Error('Não foi possível salvar as alterações do perfil.');
