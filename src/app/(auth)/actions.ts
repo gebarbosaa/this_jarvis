@@ -3,15 +3,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 
-const ACCESS_PIN = process.env.SECRETARIA_PIN ?? '1406';
-
-export async function signIn(formData: FormData) {
-  const pin = String(formData.get('pin') ?? '');
-
-  if (pin !== ACCESS_PIN) {
-    redirect('/login?erro=PIN%20incorreto.');
-  }
-
+export async function signIn() {
   const supabase = createClient();
   const { error } = await supabase.auth.signInAnonymously();
 
