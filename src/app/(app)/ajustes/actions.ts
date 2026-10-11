@@ -12,7 +12,6 @@ export async function updateProfile(formData: FormData) {
 
   const display_name = String(formData.get('display_name') ?? '').trim();
 
-  // @ts-expect-error Supabase's installed generic currently mis-infers the generated profile update payload.
   const { error } = await supabase.from('profiles').update({ display_name }).eq('id', user.id);
   if (error) {
     console.error('[ajustes] Falha ao atualizar perfil', error);
