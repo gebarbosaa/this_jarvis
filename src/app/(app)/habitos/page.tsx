@@ -43,6 +43,18 @@ export default async function HabitosPage() {
   const expectedCompletions = Math.max(activeHabits.length * 7, 1);
   const weeklyPercent = Math.round(Math.min(100, completedWeekLogs.length / expectedCompletions * 100));
   const overallTodayPercent = activeHabits.length ? Math.round(todayDone.size / activeHabits.length * 100) : 0;
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(12, 0, 0, 0);
+  const monthLength = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).getDate();
+  const monthOffset = (monthStart.getDay() + 6) % 7;
+  const completedDates = new Set((historyLogs ?? []).filter((l) => l.done).map((l) => l.logged_date));
+  const monthCells = Array.from({ length: monthOffset + monthLength }, (_, index) => {
+    if (index < monthOffset) return null;
+    const day = index - monthOffset + 1;
+    return `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  });
+
   const historyByHabit = new Map<string, Set<string>>();
   for (const log of (historyLogs ?? []).filter((l) => l.done)) {
     if (!historyByHabit.has(log.habit_id)) historyByHabit.set(log.habit_id, new Set());
@@ -70,6 +82,36 @@ export default async function HabitosPage() {
           <p className="section-label">Hábitos ativos</p>
           <p className="mt-2 text-3xl font-black text-primary">{activeHabits.length}</p>
           <p className="mt-1 text-xs text-ink-soft">Pequenas ações, grandes resultados.</p>
+        </div>
+      </section>
+
+      <section className="app-card p-4 sm:p-5">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <p className="section-label">Histórico mensal</p>
+            <p className="mt-1 text-sm text-ink-soft">Dias em que você concluiu pelo menos um hábito.</p>
+          </div>
+          <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[10px] font-bold tracking-wider text-primary">
+            {monthStart.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+          </span>
+        </div>
+        <div className="grid grid-cols-7 gap-1.5">
+          {['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'].map((day) => (
+            <span key={day} className="py-1 text-center text-[9px] font-bold tracking-wider text-ink-faint">{day}</span>
+          ))}
+          {monthCells.map((date, index) => {
+            const done = date ? completedDates.has(date) : false;
+            const isToday = date === today;
+            return date ? (
+              <div key={date} title={done ? 'Hábito concluído neste dia' : 'Nenhuma conclusão registrada'} className={`flex aspect-square items-center justify-center rounded-lg border text-xs font-semibold ${done ? 'border-primary/35 bg-primary/20 text-primary shadow-[inset_0_0_12px_rgba(60,190,255,.08)]' : 'border-border/50 bg-surface text-ink-faint'} ${isToday ? 'ring-1 ring-primary ring-offset-1 ring-offset-surface' : ''}`}>
+                {Number(date.slice(-2))}
+              </div>
+            ) : <span key={`blank-${index}`} />;
+          })}
+        </div>
+        <div className="mt-3 flex items-center gap-2 text-[10px] text-ink-faint">
+          <span className="h-2.5 w-2.5 rounded-sm border border-primary/35 bg-primary/20" />
+          Dia com hábito concluído
         </div>
       </section>
 
