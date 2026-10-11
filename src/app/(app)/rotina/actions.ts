@@ -85,3 +85,16 @@ export async function deleteRoutineActivity(formData: FormData) {
   }
   revalidatePath('/rotina');
 }
+
+
+export async function createRoutine(formData: FormData) {
+  const { supabase, user } = await getUserOrThrow();
+  const name = String(formData.get('name') || '').trim().slice(0, 120);
+  if (!name) throw new Error('Informe o nome da rotina.');
+  const { error } = await supabase.from('routines').insert({ user_id: user.id, name });
+  if (error) {
+    console.error('[rotina] Falha ao criar rotina', error);
+    throw new Error('Não foi possível criar a rotina.');
+  }
+  revalidatePath('/rotina');
+}
