@@ -6,13 +6,23 @@ import { gerarPlanoSemanal } from '@/lib/ai/weeklyPlan';
 // Executado pelo Vercel Cron (ver vercel.json). Protegido por CRON_SECRET
 // para que ninguém de fora consiga disparar isso manualmente.
 export async function GET(request: Request) {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    console.error('[daily-brief] CRON_SECRET não configurado.');
+    return NextResponse.json({ error: 'Cron não configurado no servidor.' }, { status: 500 });
+  }
+
   const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
   }
 
   if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json({ error: 'GEMINI_API_KEY não configurada no servidor.' }, { status: 500 });
+  }
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('[daily-brief] Credenciais administrativas do Supabase não configuradas.');
+    return NextResponse.json({ error: 'Banco de dados não configurado no servidor.' }, { status: 500 });
   }
 
   const supabase = createAdminClient();
