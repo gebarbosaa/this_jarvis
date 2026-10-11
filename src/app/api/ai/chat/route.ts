@@ -101,33 +101,56 @@ async function executarFerramenta(
 ): Promise<string> {
   switch (name) {
     case 'criar_tarefa': {
-      await supabase.from('tasks').insert({
+      const { error } = await supabase.from('tasks').insert({
         user_id: userId,
-        title: input.title,
-        due_date: input.due_date || null,
+        title: String(input.title ?? '').trim(),
+        due_date: input.due_date ? String(input.due_date) : null,
         priority: (input.priority as 'low' | 'medium' | 'high') || 'medium',
       });
-      return `Tarefa "${input.title}" criada.`;
+      if (error) {
+        console.error('[api/ai/chat] task insert failed', error);
+        return 'Não consegui salvar a tarefa. Nenhum cadastro foi confirmado.';
+      }
+      return `Tarefa "${String(input.title ?? '').trim()}" criada.`;
     }
     case 'criar_habito': {
-      await supabase.from('habits').insert({ user_id: userId, name: input.name });
-      return `Hábito "${input.name}" criado.`;
+      const { error } = await supabase.from('habits').insert({
+        user_id: userId,
+        name: String(input.name ?? '').trim(),
+      });
+      if (error) {
+        console.error('[api/ai/chat] habit insert failed', error);
+        return 'Não consegui salvar o hábito. Nenhum cadastro foi confirmado.';
+      }
+      return `Hábito "${String(input.name ?? '').trim()}" criado.`;
     }
     case 'criar_nota': {
-      await supabase.from('notes').insert({
+      const { error } = await supabase.from('notes').insert({
         user_id: userId,
-        title: input.title || '',
-        content: input.content,
+        title: String(input.title ?? '').trim(),
+        content: String(input.content ?? '').trim(),
       });
+      if (error) {
+        console.error('[api/ai/chat] note insert failed', error);
+        return 'Não consegui salvar a nota. Nenhum cadastro foi confirmado.';
+      }
       return 'Nota salva.';
     }
     case 'criar_lembrete': {
-      await supabase.from('reminders').insert({
+      const remindAt = new Date(String(input.remind_at ?? ''));
+      if (!String(input.title ?? '').trim() || !String(input.remind_at ?? '').trim() || Number.isNaN(remindAt.getTime())) {
+        return 'Não consegui salvar o lembrete porque o título ou a data/hora são inválidos.';
+      }
+      const { error } = await supabase.from('reminders').insert({
         user_id: userId,
-        title: input.title,
-        remind_at: new Date(input.remind_at).toISOString(),
+        title: String(input.title).trim(),
+        remind_at: remindAt.toISOString(),
       });
-      return `Lembrete "${input.title}" criado.`;
+      if (error) {
+        console.error('[api/ai/chat] reminder insert failed', error);
+        return 'Não consegui salvar o lembrete. Nenhum cadastro foi confirmado.';
+      }
+      return `Lembrete "${String(input.title).trim()}" criado.`;
     }
     case 'criar_compromisso': {
       const allDay = input.all_day === true || input.all_day === 'true';
@@ -166,12 +189,16 @@ async function executarFerramenta(
       return 'Compromisso "' + String(input.title ?? '') + '" marcado.';
     }
     case 'criar_objetivo': {
-      await supabase.from('goals').insert({
+      const { error } = await supabase.from('goals').insert({
         user_id: userId,
-        title: input.title,
-        target_date: input.target_date || null,
+        title: String(input.title ?? '').trim(),
+        target_date: input.target_date ? String(input.target_date) : null,
       });
-      return `Objetivo "${input.title}" criado.`;
+      if (error) {
+        console.error('[api/ai/chat] goal insert failed', error);
+        return 'Não consegui salvar o objetivo. Nenhum cadastro foi confirmado.';
+      }
+      return `Objetivo "${String(input.title ?? '').trim()}" criado.`;
     }
     default:
       return `Ferramenta desconhecida: ${name}`;
