@@ -4,15 +4,18 @@ import { todayISODate } from '@/lib/date';
 
 /**
  * Analisa o dia do usuário e, se houver algo relevante (atrasos, dia cheio,
- * hábito esquecido), gera uma mensagem curta e proativa da Secretária e
- * salva na conversa mais recente dele. Retorna null quando não há nada
- * relevante a dizer (evita mandar mensagem vazia todo dia).
+ * hábito ainda não registrado ou lembretes), gera uma mensagem curta e proativa
+ * e salva na conversa mais recente dele.
  */
 export async function gerarResumoDiario(
   supabase: SupabaseClient,
   userId: string
 ): Promise<string | null> {
   const today = todayISODate();
+  // Os lembretes são timestamptz: delimitar explicitamente o dia em São Paulo
+  // evita deslocar eventos para ontem/amanhã quando o servidor roda em UTC.
+  const inicioHoje = `${today}T00:00:00-03:00`;
+  const fimHoje = `${today}T23:59:59.999-03:00`;
 
   const [{ data: atrasadas }, { data: tasksHoje }, { data: habits }, { data: logsHoje }, { data: remindersHoje }] =
     await Promise.all([
@@ -35,8 +38,8 @@ export async function gerarResumoDiario(
         .select('title, remind_at')
         .eq('user_id', userId)
         .is('dismissed_at', null)
-        .gte('remind_at', `${today}T00:00:00`)
-        .lte('remind_at', `${today}T23:59:59`),
+        .gte('remind_at', inicioHoje)
+        .lte('remind_at', fimHoje),
     ]);
 
   const feitosHojeIds = new Set((logsHoje ?? []).map((l) => l.habit_id));
@@ -45,15 +48,16 @@ export async function gerarResumoDiario(
   const temAlgoRelevante =
     (atrasadas?.length ?? 0) > 0 ||
     (tasksHoje?.length ?? 0) >= 3 ||
-    (remindersHoje?.length ?? 0) > 0;
+    (remindersHoje?.length ?? 0) > 0 ||
+    habitosPendentes.length > 0;
 
   if (!temAlgoRelevante) return null;
 
   const contexto = JSON.stringify({
-    tarefas_atrasadas: atrasadas,
-    tarefas_de_hoje: tasksHoje,
+    tarefas_atrasadas: atrasadas ?? [],
+    tarefas_de_hoje: tasksHoje ?? [],
     habitos_pendentes_hoje: habitosPendentes.map((h) => h.name),
-    lembretes_hoje: remindersHoje,
+    lembretes_hoje: remindersHoje ?? [],
   });
 
   const data = await chamarIA({
@@ -77,24 +81,34 @@ export async function gerarResumoDiario(
     .limit(1)
     .maybeSingle();
 
-  const conversationId =
-    conversaExistente?.id ??
-    (
-      await supabase
-        .from('ai_conversations')
-        .insert({ user_id: userId, title: 'Conversa com a Secretária' })
-        .select('id')
-        .single()
-    ).data?.id;
+  let conversationId = conversaExistente?.id;
+  if (!conversationId) {
+    const { data: novaConversa, error: erroConversa } = await supabase
+      .from('ai_conversations')
+      .insert({ user_id: userId, title: 'Conversa com a Secretária' })
+      .select('id')
+      .single();
+
+    if (erroConversa) {
+      console.error('[daily-brief] Não foi possível criar conversa', erroConversa);
+      return null;
+    }
+    conversationId = novaConversa?.id;
+  }
 
   if (!conversationId) return null;
 
-  await supabase.from('ai_messages').insert({
+  const { error: erroMensagem } = await supabase.from('ai_messages').insert({
     conversation_id: conversationId,
     user_id: userId,
     role: 'assistant',
     content: texto,
   });
+
+  if (erroMensagem) {
+    console.error('[daily-brief] Não foi possível salvar a mensagem', erroMensagem);
+    return null;
+  }
 
   return texto;
 }
