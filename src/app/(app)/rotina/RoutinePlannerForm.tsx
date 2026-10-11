@@ -17,7 +17,7 @@ export function RoutinePlannerForm({dayStart,dayEnd}:{dayStart:string;dayEnd:str
    </form>
   </section>
   <section className="app-card p-4 sm:p-5"><div className="mb-4"><p className="section-label">Afazeres e rotina cotidiana</p><p className="mt-1 text-sm text-ink-soft">Escolha em quais dias cada atividade acontece. Horários fixos ficam protegidos; o restante é encaixado automaticamente.</p></div>
-   <form ref={ref} action={async fd=>{ref.current?.reset();await addRoutineActivity(fd)}} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+   <form ref={ref} action={async fd=>{await addRoutineActivity(fd);ref.current?.reset()}} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
     <input name="title" required placeholder="Ex.: estudar, academia..." className="field lg:col-span-2"/>
     <input name="duration_minutes" type="number" min="1" max="1440" defaultValue="30" className="field" placeholder="Minutos"/>
     <input name="fixed_start" type="time" className="field" aria-label="Horário fixo (opcional)"/>
