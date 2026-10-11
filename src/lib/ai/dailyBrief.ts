@@ -17,7 +17,7 @@ export async function gerarResumoDiario(
   const inicioHoje = `${today}T00:00:00-03:00`;
   const fimHoje = `${today}T23:59:59.999-03:00`;
 
-  const [{ data: atrasadas }, { data: tasksHoje }, { data: habits }, { data: logsHoje }, { data: remindersHoje }] =
+  const [atrasadasResult, tasksHojeResult, habitsResult, logsHojeResult, remindersHojeResult] =
     await Promise.all([
       supabase
         .from('tasks')
@@ -42,8 +42,25 @@ export async function gerarResumoDiario(
         .lte('remind_at', fimHoje),
     ]);
 
-  const feitosHojeIds = new Set((logsHoje ?? []).map((l) => l.habit_id));
-  const habitosPendentes = (habits ?? []).filter((h) => !feitosHojeIds.has(h.id));
+  const erroConsulta = [
+    atrasadasResult.error,
+    tasksHojeResult.error,
+    habitsResult.error,
+    logsHojeResult.error,
+    remindersHojeResult.error,
+  ].find(Boolean);
+  if (erroConsulta) {
+    console.error('[daily-brief] Falha ao consultar dados do usuário', erroConsulta);
+    throw new Error('Não foi possível carregar todos os dados para o resumo diário.');
+  }
+
+  const atrasadas = atrasadasResult.data ?? [];
+  const tasksHoje = tasksHojeResult.data ?? [];
+  const habits = habitsResult.data ?? [];
+  const logsHoje = logsHojeResult.data ?? [];
+  const remindersHoje = remindersHojeResult.data ?? [];
+  const feitosHojeIds = new Set(logsHoje.map((l) => l.habit_id));
+  const habitosPendentes = habits.filter((h) => !feitosHojeIds.has(h.id));
 
   const temAlgoRelevante =
     (atrasadas?.length ?? 0) > 0 ||
@@ -73,13 +90,18 @@ export async function gerarResumoDiario(
   const texto = extrairTexto(data).trim();
   if (!texto) return null;
 
-  const { data: conversaExistente } = await supabase
+  const { data: conversaExistente, error: erroBuscaConversa } = await supabase
     .from('ai_conversations')
     .select('id')
     .eq('user_id', userId)
     .order('updated_at', { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  if (erroBuscaConversa) {
+    console.error('[daily-brief] Não foi possível buscar conversa existente', erroBuscaConversa);
+    return null;
+  }
 
   let conversationId = conversaExistente?.id;
   if (!conversationId) {
