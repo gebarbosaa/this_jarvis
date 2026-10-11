@@ -3,6 +3,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { gerarResumoDiario } from '@/lib/ai/dailyBrief';
 import { gerarPlanoSemanal } from '@/lib/ai/weeklyPlan';
 
+export const dynamic = 'force-dynamic';
+
 // Executado pelo Vercel Cron (ver vercel.json). Protegido por CRON_SECRET
 // para que ninguém de fora consiga disparar isso manualmente.
 export async function GET(request: Request) {
