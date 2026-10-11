@@ -9,13 +9,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex min-w-0 items-center gap-3 lg:hidden">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-sm font-black text-primary-foreground shadow-lg">J</div>
             <div className="min-w-0">
-              <p className="label-caps truncate text-[13px] font-bold tracking-[0.16em]">SECRETÁRIA</p>
-              <p className="truncate text-[9px] text-ink-soft">ORGANIZAÇÃO PESSOAL</p>
+              <p className="label-caps truncate text-[13px] font-bold tracking-[0.16em]">J.A.R.V.I.S.</p>
+              <p className="truncate text-[9px] text-ink-soft">SISTEMA PESSOAL INTELIGENTE</p>
             </div>
           </div>
           <div className="hidden lg:block">
-            <p className="label-caps text-[10px] font-semibold text-ink-soft">SECRETÁRIA</p>
-            <p className="text-xl font-bold tracking-tight">ORGANIZAÇÃO PESSOAL</p>
+            <p className="label-caps text-[10px] font-semibold tracking-[.18em] text-primary">J.A.R.V.I.S.</p>
+            <p className="text-xl font-bold tracking-tight text-ink">SISTEMA PESSOAL INTELIGENTE</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <div className="hidden items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-[10px] text-primary sm:flex">
