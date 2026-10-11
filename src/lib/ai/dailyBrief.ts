@@ -31,8 +31,8 @@ export async function gerarResumoDiario(
         .eq('user_id', userId)
         .eq('status', 'pending')
         .eq('due_date', today),
-      supabase.from('habits').select('id, name').eq('user_id', userId).eq('archived', false),
-      supabase.from('habit_logs').select('habit_id').eq('user_id', userId).eq('logged_date', today),
+      supabase.from('habits').select('id, name, frequency').eq('user_id', userId).eq('archived', false).eq('frequency', 'daily'),
+      supabase.from('habit_logs').select('habit_id').eq('user_id', userId).eq('logged_date', today).eq('done', true),
       supabase
         .from('reminders')
         .select('title, remind_at')
