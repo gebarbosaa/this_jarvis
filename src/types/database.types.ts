@@ -10,7 +10,8 @@ export type AiMessageRole = 'user' | 'assistant' | 'system';
 export type IntegrationProvider = 'harmony_hub';
 export type IntegrationStatus = 'pending' | 'connected' | 'revoked' | 'error';
 
-export interface Database {
+export type Database = {
+  __InternalSupabase: { PostgrestVersion: "14.5" };
   public: {
     Tables: {
       profiles: {
@@ -23,7 +24,7 @@ export interface Database {
           updated_at: string;
         };
         Insert: Partial<Database['public']['Tables']['profiles']['Row']> & { id: string };
-        Update: Partial<Database['public']['Tables']['profiles']['Row']>;
+        Update: { id?: string; display_name?: string | null; avatar_url?: string | null; timezone?: string; created_at?: string; updated_at?: string };
         Relationships: [];
       };
       tasks: {
