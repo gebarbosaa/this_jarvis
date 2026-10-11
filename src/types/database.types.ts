@@ -268,5 +268,16 @@ export interface Database {
         Relationships: [];
       };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: {
+      task_status: TaskStatus;
+      task_priority: TaskPriority;
+      habit_frequency: HabitFrequency;
+      goal_status: GoalStatus;
+      integration_provider: IntegrationProvider;
+      integration_status: IntegrationStatus;
+    };
+    CompositeTypes: Record<string, never>;
   };
 }
