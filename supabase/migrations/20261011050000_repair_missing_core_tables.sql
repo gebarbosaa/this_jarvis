@@ -4,7 +4,7 @@ do $$ begin create type public.task_status as enum ('pending','done','archived')
 do $$ begin create type public.task_priority as enum ('low','medium','high'); exception when duplicate_object then null; end $$;
 do $$ begin create type public.habit_frequency as enum ('daily','weekly','custom'); exception when duplicate_object then null; end $$;
 do $$ begin create type public.goal_status as enum ('active','paused','done','abandoned'); exception when duplicate_object then null; end $$;
-create or replace function public.set_updated_at() returns trigger language plpgsql as $$ begin new.updated_at=now(); return new; end $$;
+create or replace function public.set_updated_at() returns trigger language plpgsql set search_path=pg_catalog as $ begin new.updated_at=now(); return new; end $;
 
 create table if not exists public.profiles (id uuid primary key references auth.users(id) on delete cascade, display_name text, avatar_url text, timezone text not null default 'America/Sao_Paulo', created_at timestamptz not null default now(), updated_at timestamptz not null default now());
 create table if not exists public.tasks (id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade, title text not null, description text, status public.task_status not null default 'pending', priority public.task_priority not null default 'medium', due_date date, due_time time, completed_at timestamptz, created_at timestamptz not null default now(), updated_at timestamptz not null default now());
@@ -87,5 +87,30 @@ after insert on public.ai_messages
 for each row execute function public.touch_ai_conversation_on_message();
 
 -- The function is only intended to run as a trigger, not as a public RPC.
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+revoke execute on function public.touch_ai_conversation_on_message() from public, anon, authenticated;
+
+-- Restrict older ownership policies that were implicitly available to PUBLIC/anon.
+do $$ declare p record; begin
+  for p in select schemaname, tablename, policyname, roles
+           from pg_policies where schemaname='public'
+  loop
+    if 'public'=any(p.roles) then
+      execute format('alter policy %I on %I.%I to authenticated',p.policyname,p.schemaname,p.tablename);
+    end if;
+  end loop;
+end $$;
+
+create or replace function public.touch_ai_conversation_on_message()
+returns trigger language plpgsql set search_path=pg_catalog as $$
+begin
+  update public.ai_conversations set updated_at=now()
+  where id=new.conversation_id and user_id=new.user_id;
+  return new;
+end $$;
+drop trigger if exists ai_messages_touch_conversation on public.ai_messages;
+create trigger ai_messages_touch_conversation after insert on public.ai_messages
+for each row execute function public.touch_ai_conversation_on_message();
+
 revoke execute on function public.handle_new_user() from public, anon, authenticated;
 revoke execute on function public.touch_ai_conversation_on_message() from public, anon, authenticated;
