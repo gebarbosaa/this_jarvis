@@ -45,7 +45,7 @@ function normalizarConteudo(content: unknown): GeminiPart[] {
 function prepararHistorico(messages: IAInputMessage[]): GeminiContent[] {
   return messages
     .filter((message) => message.role !== 'system')
-    .map((message) => ({
+    .map((message): GeminiContent => ({
       role: message.role === 'assistant' ? 'model' : 'user',
       parts: normalizarConteudo(message.content),
     }))
