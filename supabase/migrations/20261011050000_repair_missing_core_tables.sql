@@ -97,3 +97,25 @@ for each row execute function public.touch_ai_conversation_on_message();
 
 revoke execute on function public.handle_new_user() from public, anon, authenticated;
 revoke execute on function public.touch_ai_conversation_on_message() from public, anon, authenticated;
+
+
+-- Restrict legacy policies accidentally created for PUBLIC to authenticated users.
+do $fix$
+declare p record; stmt text;
+begin
+  for p in
+    select schemaname, tablename, policyname, permissive, cmd, qual, with_check
+    from pg_policies
+    where schemaname = 'public' and 'public' = any(roles)
+  loop
+    execute format('drop policy %I on %I.%I', p.policyname, p.schemaname, p.tablename);
+    stmt := format('create policy %I on %I.%I as %s for %s to authenticated',
+      p.policyname, p.schemaname, p.tablename, p.permissive, p.cmd);
+    if p.qual is not null then stmt := stmt || format(' using (%s)', p.qual); end if;
+    if p.with_check is not null then stmt := stmt || format(' with check (%s)', p.with_check); end if;
+    execute stmt;
+  end loop;
+end
+$fix$;
+
+notify pgrst, 'reload schema';
