@@ -13,12 +13,12 @@ create extension if not exists "pgcrypto";
 -- Função utilitária: mantém updated_at sempre atualizado
 -- ----------------------------------------------------------------------------
 create or replace function public.set_updated_at()
-returns trigger language plpgsql set search_path = pg_catalog as $
+returns trigger language plpgsql set search_path = pg_catalog as $func$
 begin
   new.updated_at = now();
   return new;
 end;
-$;
+$func$;
 
 -- ----------------------------------------------------------------------------
 -- profiles — um registro por usuário autenticado
@@ -425,19 +425,20 @@ create policy google_calendar_connections_delete_own on public.google_calendar_c
 
 -- Keep conversation ordering aligned with actual chat activity.
 create or replace function public.touch_ai_conversation_on_message()
-returns trigger language plpgsql set search_path = pg_catalog as $
+returns trigger language plpgsql set search_path = pg_catalog as $func$
 begin
   update public.ai_conversations
   set updated_at = now()
   where id = new.conversation_id and user_id = new.user_id;
   return new;
 end;
-$;
+$func$;
 create trigger ai_messages_touch_conversation
   after insert on public.ai_messages
   for each row execute function public.touch_ai_conversation_on_message();
 revoke execute on function public.handle_new_user() from public, anon, authenticated;
 revoke execute on function public.touch_ai_conversation_on_message() from public, anon, authenticated;
+grant select, insert, update, delete on public.routines, public.routine_items, public.routine_settings, public.routine_activities, public.google_calendar_connections to authenticated;
 
 -- ============================================================================
 -- Fim do schema inicial.
