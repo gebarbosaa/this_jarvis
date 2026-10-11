@@ -23,8 +23,8 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<Database['public']['Tables']['profiles']['Row']> & { id: string };
-        Update: { id?: string; display_name?: string | null; avatar_url?: string | null; timezone?: string; created_at?: string; updated_at?: string };
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
         Relationships: [];
       };
       tasks: {
@@ -41,11 +41,8 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<Database['public']['Tables']['tasks']['Row']> & {
-          user_id: string;
-          title: string;
-        };
-        Update: Partial<Database['public']['Tables']['tasks']['Row']>;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
         Relationships: [];
       };
       habits: {
@@ -61,11 +58,8 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<Database['public']['Tables']['habits']['Row']> & {
-          user_id: string;
-          name: string;
-        };
-        Update: Partial<Database['public']['Tables']['habits']['Row']>;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
         Relationships: [];
       };
       habit_logs: {
@@ -78,11 +72,8 @@ export type Database = {
           note: string | null;
           created_at: string;
         };
-        Insert: Partial<Database['public']['Tables']['habit_logs']['Row']> & {
-          habit_id: string;
-          user_id: string;
-        };
-        Update: Partial<Database['public']['Tables']['habit_logs']['Row']>;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
         Relationships: [];
       };
       notes: {
@@ -96,8 +87,8 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<Database['public']['Tables']['notes']['Row']> & { user_id: string };
-        Update: Partial<Database['public']['Tables']['notes']['Row']>;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
         Relationships: [];
       };
       goals: {
@@ -111,11 +102,8 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<Database['public']['Tables']['goals']['Row']> & {
-          user_id: string;
-          title: string;
-        };
-        Update: Partial<Database['public']['Tables']['goals']['Row']>;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
         Relationships: [];
       };
       goal_steps: {
@@ -128,12 +116,8 @@ export type Database = {
           order_index: number;
           created_at: string;
         };
-        Insert: Partial<Database['public']['Tables']['goal_steps']['Row']> & {
-          goal_id: string;
-          user_id: string;
-          title: string;
-        };
-        Update: Partial<Database['public']['Tables']['goal_steps']['Row']>;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
         Relationships: [];
       };
       reminders: {
@@ -151,12 +135,8 @@ export type Database = {
           google_synced_at: string | null;
           source: string;
         };
-        Insert: Partial<Database['public']['Tables']['reminders']['Row']> & {
-          user_id: string;
-          title: string;
-          remind_at: string;
-        };
-        Update: Partial<Database['public']['Tables']['reminders']['Row']>;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
         Relationships: [];
       };
       calendar_events: {
@@ -173,12 +153,8 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<Database['public']['Tables']['calendar_events']['Row']> & {
-          user_id: string;
-          title: string;
-          start_at: string;
-        };
-        Update: Partial<Database['public']['Tables']['calendar_events']['Row']>;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
         Relationships: [];
       };
       weekly_plans: {
@@ -191,11 +167,8 @@ export type Database = {
           generated_by_ai: boolean;
           created_at: string;
         };
-        Insert: Partial<Database['public']['Tables']['weekly_plans']['Row']> & {
-          user_id: string;
-          week_start_date: string;
-        };
-        Update: Partial<Database['public']['Tables']['weekly_plans']['Row']>;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
         Relationships: [];
       };
       ai_conversations: {
@@ -206,10 +179,8 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<Database['public']['Tables']['ai_conversations']['Row']> & {
-          user_id: string;
-        };
-        Update: Partial<Database['public']['Tables']['ai_conversations']['Row']>;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
         Relationships: [];
       };
       ai_messages: {
@@ -221,56 +192,51 @@ export type Database = {
           content: string;
           created_at: string;
         };
-        Insert: Partial<Database['public']['Tables']['ai_messages']['Row']> & {
-          conversation_id: string;
-          user_id: string;
-          role: AiMessageRole;
-          content: string;
-        };
-        Update: Partial<Database['public']['Tables']['ai_messages']['Row']>;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
         Relationships: [];
       };
 
       routines: {
         Row: { id: string; user_id: string; name: string; created_at: string };
-        Insert: Partial<Database['public']['Tables']['routines']['Row']> & { user_id: string; name: string };
-        Update: Partial<Database['public']['Tables']['routines']['Row']>;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
         Relationships: [];
       };
       routine_items: {
         Row: { id: string; routine_id: string; user_id: string; title: string; order_index: number; created_at: string };
-        Insert: Partial<Database['public']['Tables']['routine_items']['Row']> & { routine_id: string; user_id: string; title: string };
-        Update: Partial<Database['public']['Tables']['routine_items']['Row']>;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
         Relationships: [];
       };
       routine_settings: {
         Row: { user_id: string; day_start: string; day_end: string; updated_at: string };
-        Insert: Partial<Database['public']['Tables']['routine_settings']['Row']> & { user_id: string };
-        Update: Partial<Database['public']['Tables']['routine_settings']['Row']>;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
         Relationships: [];
       };
       routine_activities: {
         Row: { id: string; user_id: string; title: string; duration_minutes: number; fixed_start: string | null; days_of_week: number[]; kind: 'daily' | 'task'; active: boolean; created_at: string };
-        Insert: Partial<Database['public']['Tables']['routine_activities']['Row']> & { user_id: string; title: string };
-        Update: Partial<Database['public']['Tables']['routine_activities']['Row']>;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
         Relationships: [];
       };
       google_calendar_connections: {
         Row: { id: string; user_id: string; calendar_id: string; google_email: string | null; access_token_encrypted: string | null; refresh_token_encrypted: string; expires_at: string | null; created_at: string; updated_at: string };
-        Insert: Partial<Database['public']['Tables']['google_calendar_connections']['Row']> & { user_id: string; refresh_token_encrypted: string };
-        Update: Partial<Database['public']['Tables']['google_calendar_connections']['Row']>;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
         Relationships: [];
       };
       integrations: {
         Row: { id: string; user_id: string; provider: IntegrationProvider; status: IntegrationStatus; external_account_id: string | null; metadata: Record<string, unknown>; connected_at: string | null; created_at: string; updated_at: string };
-        Insert: Partial<Database['public']['Tables']['integrations']['Row']> & { user_id: string; provider: IntegrationProvider };
-        Update: Partial<Database['public']['Tables']['integrations']['Row']>;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
         Relationships: [];
       };
       integration_permissions: {
         Row: { id: string; integration_id: string; user_id: string; scope: string; granted_at: string; revoked_at: string | null };
-        Insert: Partial<Database['public']['Tables']['integration_permissions']['Row']> & { integration_id: string; user_id: string; scope: string };
-        Update: Partial<Database['public']['Tables']['integration_permissions']['Row']>;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
         Relationships: [];
       };
     };
