@@ -70,3 +70,22 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users for each row execute function public.handle_new_user();
 insert into public.profiles(id,display_name) select id,coalesce(raw_user_meta_data->>'display_name',split_part(coalesce(email,''),'@',1)) from auth.users on conflict(id) do nothing;
 grant select,insert,update,delete on public.profiles,public.tasks,public.habits,public.habit_logs,public.notes,public.goals,public.goal_steps,public.weekly_plans,public.integration_permissions to authenticated;
+
+
+-- Keep conversation ordering in sync with the latest user/assistant message.
+create or replace function public.touch_ai_conversation_on_message()
+returns trigger language plpgsql as $$
+begin
+  update public.ai_conversations
+  set updated_at = now()
+  where id = new.conversation_id and user_id = new.user_id;
+  return new;
+end $$;
+drop trigger if exists ai_messages_touch_conversation on public.ai_messages;
+create trigger ai_messages_touch_conversation
+after insert on public.ai_messages
+for each row execute function public.touch_ai_conversation_on_message();
+
+-- The function is only intended to run as a trigger, not as a public RPC.
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+revoke execute on function public.touch_ai_conversation_on_message() from public, anon, authenticated;
