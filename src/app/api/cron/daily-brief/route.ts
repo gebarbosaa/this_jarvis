@@ -11,8 +11,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return NextResponse.json({ error: 'ANTHROPIC_API_KEY não configurada.' }, { status: 500 });
+  if (!process.env.GEMINI_API_KEY) {
+    return NextResponse.json({ error: 'GEMINI_API_KEY não configurada no servidor.' }, { status: 500 });
   }
 
   const supabase = createAdminClient();
