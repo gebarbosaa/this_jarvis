@@ -273,5 +273,17 @@ export interface Database {
         Relationships: [];
       };
     };
+    Views: {};
+    Functions: {};
+    Enums: {
+      task_status: TaskStatus;
+      task_priority: TaskPriority;
+      habit_frequency: HabitFrequency;
+      goal_status: GoalStatus;
+      ai_message_role: AiMessageRole;
+      integration_provider: IntegrationProvider;
+      integration_status: IntegrationStatus;
+    };
+    CompositeTypes: {};
   };
 }
