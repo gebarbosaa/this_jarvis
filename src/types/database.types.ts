@@ -273,8 +273,8 @@ export interface Database {
         Relationships: [];
       };
     };
-    Views: {};
-    Functions: {};
+    Views: { [_ in never]: never };
+    Functions: { [_ in never]: never };
     Enums: {
       task_status: TaskStatus;
       task_priority: TaskPriority;
@@ -284,6 +284,6 @@ export interface Database {
       integration_provider: IntegrationProvider;
       integration_status: IntegrationStatus;
     };
-    CompositeTypes: {};
+    CompositeTypes: { [_ in never]: never };
   };
 }
