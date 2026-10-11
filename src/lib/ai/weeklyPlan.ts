@@ -24,8 +24,8 @@ export async function gerarPlanoSemanal(
       .from('calendar_events')
       .select('title, start_at')
       .eq('user_id', userId)
-      .gte('start_at', `${inicio}T00:00:00`)
-      .lte('start_at', `${fim}T23:59:59`),
+      .gte('start_at', `${inicio}T00:00:00-03:00`)
+      .lte('start_at', `${fim}T23:59:59.999-03:00`),
   ]);
 
   const erroConsulta = [tasksResult.error, habitsResult.error, goalsResult.error, eventsResult.error].find(Boolean);
