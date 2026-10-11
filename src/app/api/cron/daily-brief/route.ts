@@ -16,7 +16,8 @@ export async function GET(request: Request) {
   }
 
   const supabase = createAdminClient();
-  const ehSegunda = new Date().getDay() === 1;
+  const diaDaSemanaEmSaoPaulo = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Sao_Paulo', weekday: 'short' }).format(new Date());
+  const ehSegunda = diaDaSemanaEmSaoPaulo === 'Mon';
 
   const { data: perfis, error } = await supabase.from('profiles').select('id');
   if (error) {
