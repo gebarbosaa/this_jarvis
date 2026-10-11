@@ -35,11 +35,11 @@ create table public.profiles (
 alter table public.profiles enable row level security;
 
 create policy "profiles_select_own" on public.profiles
-  for select using (auth.uid() = id);
+  for select to authenticated using (auth.uid() = id);
 create policy "profiles_update_own" on public.profiles
-  for update using (auth.uid() = id);
+  for update to authenticated using (auth.uid() = id) with check (auth.uid() = id);
 create policy "profiles_insert_own" on public.profiles
-  for insert with check (auth.uid() = id);
+  for insert to authenticated with check (auth.uid() = id);
 
 create trigger profiles_set_updated_at
   before update on public.profiles
@@ -84,7 +84,7 @@ create index tasks_due_date_idx on public.tasks(user_id, due_date);
 
 alter table public.tasks enable row level security;
 create policy "tasks_all_own" on public.tasks
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create trigger tasks_set_updated_at
   before update on public.tasks
@@ -112,7 +112,7 @@ create index habits_user_id_idx on public.habits(user_id);
 
 alter table public.habits enable row level security;
 create policy "habits_all_own" on public.habits
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create trigger habits_set_updated_at
   before update on public.habits
@@ -134,7 +134,7 @@ create index habit_logs_habit_date_idx on public.habit_logs(habit_id, logged_dat
 
 alter table public.habit_logs enable row level security;
 create policy "habit_logs_all_own" on public.habit_logs
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ----------------------------------------------------------------------------
 -- notes
@@ -154,7 +154,7 @@ create index notes_user_id_idx on public.notes(user_id);
 
 alter table public.notes enable row level security;
 create policy "notes_all_own" on public.notes
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create trigger notes_set_updated_at
   before update on public.notes
@@ -180,7 +180,7 @@ create index goals_user_id_idx on public.goals(user_id);
 
 alter table public.goals enable row level security;
 create policy "goals_all_own" on public.goals
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create trigger goals_set_updated_at
   before update on public.goals
@@ -200,7 +200,7 @@ create index goal_steps_goal_id_idx on public.goal_steps(goal_id);
 
 alter table public.goal_steps enable row level security;
 create policy "goal_steps_all_own" on public.goal_steps
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ----------------------------------------------------------------------------
 -- reminders
@@ -221,7 +221,7 @@ create index reminders_remind_at_idx on public.reminders(user_id, remind_at);
 
 alter table public.reminders enable row level security;
 create policy "reminders_all_own" on public.reminders
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ----------------------------------------------------------------------------
 -- calendar_events + weekly_plans
@@ -245,7 +245,7 @@ create index calendar_events_start_at_idx on public.calendar_events(user_id, sta
 
 alter table public.calendar_events enable row level security;
 create policy "calendar_events_all_own" on public.calendar_events
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create trigger calendar_events_set_updated_at
   before update on public.calendar_events
@@ -264,7 +264,7 @@ create table public.weekly_plans (
 
 alter table public.weekly_plans enable row level security;
 create policy "weekly_plans_all_own" on public.weekly_plans
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ----------------------------------------------------------------------------
 -- ai_conversations + ai_messages (Secretária IA)
@@ -283,7 +283,7 @@ create index ai_conversations_user_id_idx on public.ai_conversations(user_id);
 
 alter table public.ai_conversations enable row level security;
 create policy "ai_conversations_all_own" on public.ai_conversations
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create trigger ai_conversations_set_updated_at
   before update on public.ai_conversations
@@ -302,7 +302,7 @@ create index ai_messages_conversation_id_idx on public.ai_messages(conversation_
 
 alter table public.ai_messages enable row level security;
 create policy "ai_messages_all_own" on public.ai_messages
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ============================================================================
 -- FASE 4 (preparado, não usado ainda) — integração com o Harmony Hub
@@ -327,7 +327,7 @@ create table public.integrations (
 
 alter table public.integrations enable row level security;
 create policy "integrations_all_own" on public.integrations
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create trigger integrations_set_updated_at
   before update on public.integrations
@@ -345,7 +345,7 @@ create table public.integration_permissions (
 
 alter table public.integration_permissions enable row level security;
 create policy "integration_permissions_all_own" on public.integration_permissions
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ============================================================================
 -- Fim do schema inicial.
