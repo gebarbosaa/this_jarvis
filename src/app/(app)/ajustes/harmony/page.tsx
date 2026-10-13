@@ -24,7 +24,7 @@ export default function HarmonyIntegrationPage() {
     <PageHeader title="Harmony Hub" subtitle="Vincule sua Secretária ao seu ambiente financeiro do Harmony Hub." />
     <div className="app-card max-w-2xl p-5">
       <p className="section-label">CÓDIGO DE VINCULAÇÃO</p>
-      <p className="mt-2 text-sm leading-6 text-ink-soft">Gere um código temporário e informe-o no Harmony Hub em Painel → Integrações. O código expira em 10 minutos.</p>
+      <p className="mt-2 text-sm leading-6 text-ink-soft">Gere um código temporário de 12 caracteres e informe-o no Harmony Hub em Painel → Integrações. O código expira em 10 minutos.</p>
       {code ? <div className="mt-5 rounded-2xl border border-primary/30 bg-primary/5 p-5 text-center">
         <p className="break-all text-2xl font-black tracking-[0.18em] text-primary sm:text-3xl sm:tracking-[0.3em]">{code}</p>
         <p className="mt-2 text-xs text-ink-soft">Expira em {new Date(expires).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</p>
