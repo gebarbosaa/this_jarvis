@@ -131,10 +131,10 @@ export default function FinancasPage() {
       {!loading && !error && status && (
         <>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <MetricCard symbol="✓" label="CONEXÃO" value={connected ? 'Conectado' : 'Desconectado'} description={connected ? 'Vínculo identificado para sua conta.' : 'Conecte sua conta para iniciar.'} tone={connected ? 'green' : 'amber'} />
             <MetricCard symbol="↗" label="SALDO DO MÊS" value={status.finance ? money(status.finance.summary.balance) : '—'} description={status.finance ? `Saldo calculado em ${status.finance.period}.` : 'Aguardando leitura segura dos dados financeiros.'} />
+            <MetricCard symbol="＋" label="RECEITAS DO MÊS" value={status.finance ? money(status.finance.summary.income) : '—'} description={status.finance ? 'Entradas registradas no Harmony Hub.' : 'Nenhum valor fictício será exibido.'} tone="green" />
             <MetricCard symbol="◉" label="DESPESAS DO MÊS" value={status.finance ? money(status.finance.summary.expenses) : '—'} description={status.finance ? `${status.finance.summary.cards_count} cartão(ões) vinculados.` : 'Nenhum valor fictício será exibido.'} tone="amber" />
-            <MetricCard symbol="▤" label="FATURAS E PARCELAS" value={status.finance ? money(status.finance.summary.invoice_total) : '—'} description={status.finance ? `${status.finance.summary.installments_count} parcelado(s) cadastrados.` : 'Faturas serão exibidas após validar a conexão.'} tone="violet" />
+            <MetricCard symbol="▤" label="FATURAS DO MÊS" value={status.finance ? money(status.finance.summary.invoice_total) : '—'} description={status.finance ? `${status.finance.summary.installments_count} parcelado(s) cadastrados.` : 'Faturas serão exibidas após validar a conexão.'} tone="violet" />
           </div>
 
           <section className="app-card p-5 sm:p-6">
