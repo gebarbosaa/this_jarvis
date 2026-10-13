@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { IconHome, IconWeek, IconTasks, IconHabit, IconNote, IconGoal, IconBell, IconSettings, IconSparkle, IconMore } from './icons';
+import { IconHome, IconWeek, IconTasks, IconHabit, IconNote, IconGoal, IconBell, IconSettings, IconSparkle, IconMore, IconGoal } from './icons';
 
 const NAV = [
   { href:'/inicio', label:'CENTRAL DE COMANDO', Icon:IconHome },
@@ -15,6 +15,7 @@ const NAV = [
   { href:'/objetivos', label:'OBJETIVOS', Icon:IconGoal },
   { href:'/lembretes', label:'LEMBRETES', Icon:IconBell },
   { href:'/secretaria-ia', label:'JARVIS IA', Icon:IconSparkle },
+  { href:'/financas', label:'FINANÇAS · HARMONY HUB', Icon:IconGoal },
   { href:'/ajustes', label:'CONFIGURAÇÕES', Icon:IconSettings },
   { href:'/mais', label:'TODOS OS PAINÉIS', Icon:IconMore },
 ] as const;
