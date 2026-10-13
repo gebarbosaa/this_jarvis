@@ -4,12 +4,42 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { PageHeader } from '@/components/ui/PageHeader';
 
+type FinanceTransaction = {
+  id: string;
+  date: string;
+  description: string;
+  amount: number | string;
+  type: string;
+  category: string | null;
+  paid: boolean;
+  card_name: string | null;
+  responsible: string | null;
+  installment_current: number | null;
+  installment_total: number | null;
+};
+type FinancePayload = {
+  period: string;
+  summary: {
+    income: number;
+    expenses: number;
+    investments: number;
+    balance: number;
+    invoice_total: number;
+    cards_count: number;
+    installments_count: number;
+    fixed_costs_count: number;
+  };
+  transactions: FinanceTransaction[];
+  synced_at: string;
+};
 type IntegrationStatus = {
   connected: boolean;
   status: string;
   connected_at: string | null;
   updated_at: string | null;
   data_available: boolean;
+  finance: FinancePayload | null;
+  data_error: string | null;
 };
 
 function MetricCard({ symbol, label, value, description, tone = 'cyan' }: {
@@ -33,6 +63,11 @@ function MetricCard({ symbol, label, value, description, tone = 'cyan' }: {
     </article>
   );
 }
+
+const money = (value: number | string | undefined) =>
+  typeof value === 'number' || typeof value === 'string'
+    ? Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+    : '—';
 
 export default function FinancasPage() {
   const [status, setStatus] = useState<IntegrationStatus | null>(null);
@@ -97,9 +132,9 @@ export default function FinancasPage() {
         <>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <MetricCard symbol="✓" label="CONEXÃO" value={connected ? 'Conectado' : 'Desconectado'} description={connected ? 'Vínculo identificado para sua conta.' : 'Conecte sua conta para iniciar.'} tone={connected ? 'green' : 'amber'} />
-            <MetricCard symbol="↗" label="SALDO DO MÊS" value="—" description="Será exibido após ativar a leitura financeira autenticada." />
-            <MetricCard symbol="◉" label="DESPESAS DO MÊS" value="—" description="Sem valores simulados: os dados virão do Harmony Hub." tone="amber" />
-            <MetricCard symbol="▤" label="FATURAS E PARCELAS" value="—" description="Faturas, cartões e parcelas serão carregados pela integração." tone="violet" />
+            <MetricCard symbol="↗" label="SALDO DO MÊS" value={status.finance ? money(status.finance.summary.balance) : '—'} description={status.finance ? `Saldo calculado em ${status.finance.period}.` : 'Aguardando leitura segura dos dados financeiros.'} />
+            <MetricCard symbol="◉" label="DESPESAS DO MÊS" value={status.finance ? money(status.finance.summary.expenses) : '—'} description={status.finance ? `${status.finance.summary.cards_count} cartão(ões) vinculados.` : 'Nenhum valor fictício será exibido.'} tone="amber" />
+            <MetricCard symbol="▤" label="FATURAS E PARCELAS" value={status.finance ? money(status.finance.summary.invoice_total) : '—'} description={status.finance ? `${status.finance.summary.installments_count} parcelado(s) cadastrados.` : 'Faturas serão exibidas após validar a conexão.'} tone="violet" />
           </div>
 
           <section className="app-card p-5 sm:p-6">
@@ -109,7 +144,9 @@ export default function FinancasPage() {
                 <h2 className="mt-2 text-lg font-bold text-ink">{connected ? 'Conta vinculada' : 'Vamos conectar suas finanças'}</h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-ink-soft">
                   {connected
-                    ? 'O vínculo foi localizado. A leitura de saldos, lançamentos, cartões e faturas ainda precisa estar disponível por uma API segura do Harmony Hub antes de mostrar valores aqui.'
+                    ? status.data_available
+                      ? 'Conexão ativa e dados financeiros recebidos diretamente do Harmony Hub. Os registros permanecem no Harmony Hub, que é a fonte oficial.'
+                      : status.data_error || 'A conexão está ativa, mas os dados financeiros ainda não estão disponíveis.'
                     : 'Gere um código temporário nesta página de configuração e conclua a vinculação no Harmony Hub em Painel → Integrações.'}
                 </p>
               </div>
@@ -119,13 +156,52 @@ export default function FinancasPage() {
               </span>
             </div>
             <div className="mt-5 flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between" style={{ borderColor: 'var(--border)' }}>
-              <p className="text-xs text-ink-soft">{lastUpdated ? `Última atualização do vínculo: ${lastUpdated}` : 'Última atualização: ainda não disponível'}</p>
+              <p className="text-xs text-ink-soft">{status.finance?.synced_at ? `Dados sincronizados: ${new Date(status.finance.synced_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}` : lastUpdated ? `Última atualização do vínculo: ${lastUpdated}` : 'Última atualização: ainda não disponível'}</p>
               <div className="flex flex-wrap gap-2">
                 <button type="button" onClick={() => void loadStatus()} className="secondary-button inline-flex items-center gap-2"><span aria-hidden="true">↻</span> Atualizar status</button>
                 <Link href="/ajustes/harmony" className="primary-button inline-flex items-center justify-center">Configurar integração</Link>
               </div>
             </div>
           </section>
+
+
+          {status.finance && (
+            <section className="app-card p-5 sm:p-6">
+              <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <p className="section-label">MOVIMENTAÇÕES RECENTES</p>
+                  <h2 className="mt-2 text-lg font-bold text-ink">Fluxo financeiro · {status.finance.period}</h2>
+                </div>
+                <span className="text-xs text-ink-soft">Somente leitura · Harmony Hub</span>
+              </div>
+              {status.finance.transactions.length === 0 ? (
+                <p className="py-8 text-center text-sm text-ink-soft">Nenhuma movimentação neste mês.</p>
+              ) : (
+                <div className="divide-y" style={{ borderColor: 'var(--border)' }}>
+                  {status.finance.transactions.slice(0, 10).map((item) => (
+                    <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-ink">{item.description}</p>
+                        <p className="mt-1 text-xs text-ink-soft">
+                          {new Date(`${item.date}T12:00:00`).toLocaleDateString('pt-BR')}
+                          {item.category ? ` · ${item.category}` : ''}
+                          {item.card_name ? ` · ${item.card_name}` : ''}
+                          {item.installment_current && item.installment_total ? ` · Parcela ${item.installment_current}/${item.installment_total}` : ''}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-sm font-bold ${item.type === 'RECEITA' ? 'text-emerald-300' : 'text-ink'}`}>
+                          {item.type === 'RECEITA' ? '+' : item.type === 'DESPESA' || item.type === 'INVESTIMENTO' ? '−' : ''}
+                          {money(item.amount)}
+                        </p>
+                        <p className="mt-1 text-[10px] text-ink-soft">{item.paid ? 'PAGO' : 'PENDENTE'}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
 
           <p className="px-1 text-xs leading-5 text-ink-soft">
             Privacidade: os números financeiros só serão exibidos depois de validar a autenticação, as permissões e o escopo da sua conta. Nenhum dado financeiro fictício é usado neste painel.
