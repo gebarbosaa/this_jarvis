@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, CircleDollarSign, CreditCard, RefreshCw, ShieldCheck, WalletCards } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 
 type IntegrationStatus = {
@@ -13,17 +12,8 @@ type IntegrationStatus = {
   data_available: boolean;
 };
 
-function MetricCard({
-  icon: Icon,
-  label,
-  value,
-  description,
-  tone = 'cyan',
-}: {
-  icon: typeof CircleDollarSign;
-  label: string;
-  value: string;
-  description: string;
+function MetricCard({ symbol, label, value, description, tone = 'cyan' }: {
+  symbol: string; label: string; value: string; description: string;
   tone?: 'cyan' | 'green' | 'violet' | 'amber';
 }) {
   const tones = {
@@ -36,9 +26,7 @@ function MetricCard({
     <article className="app-card app-card-hover min-w-0 p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <p className="section-label">{label}</p>
-        <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ${tones[tone]}`}>
-          <Icon className="h-5 w-5" aria-hidden="true" />
-        </span>
+        <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg font-bold ring-1 ${tones[tone]}`} aria-hidden="true">{symbol}</span>
       </div>
       <p className="mt-5 break-words text-xl font-bold tracking-tight text-ink sm:text-2xl">{value}</p>
       <p className="mt-2 text-xs leading-5 text-ink-soft">{description}</p>
@@ -82,8 +70,7 @@ export default function FinancasPage() {
         <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-xs font-semibold text-cyan-200">
-              <ShieldCheck className="h-4 w-4" />
-              FONTE FINANCEIRA OFICIAL
+              <span aria-hidden="true">◆</span> FONTE FINANCEIRA OFICIAL
             </div>
             <h2 className="text-xl font-bold tracking-tight text-ink sm:text-2xl">Harmony Hub</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-ink-soft">
@@ -91,17 +78,12 @@ export default function FinancasPage() {
             </p>
           </div>
           <Link href="/ajustes/harmony" className="primary-button inline-flex shrink-0 items-center justify-center gap-2">
-            {connected ? 'Gerenciar conexão' : 'Conectar Harmony Hub'}
-            <ArrowUpRight className="h-4 w-4" />
+            {connected ? 'Gerenciar conexão' : 'Conectar Harmony Hub'} <span aria-hidden="true">↗</span>
           </Link>
         </div>
       </section>
 
-      {loading && (
-        <div className="app-card flex items-center gap-3 p-5 text-sm text-ink-soft" role="status">
-          <RefreshCw className="h-4 w-4 animate-spin text-cyan-300" /> Verificando conexão segura…
-        </div>
-      )}
+      {loading && <div className="app-card flex items-center gap-3 p-5 text-sm text-ink-soft" role="status"><span className="animate-spin text-cyan-300" aria-hidden="true">◌</span> Verificando conexão segura…</div>}
 
       {error && (
         <div role="alert" className="app-card border border-rose-400/30 p-5">
@@ -114,10 +96,10 @@ export default function FinancasPage() {
       {!loading && !error && status && (
         <>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <MetricCard icon={ShieldCheck} label="CONEXÃO" value={connected ? 'Conectado' : 'Desconectado'} description={connected ? 'Vínculo identificado para sua conta.' : 'Conecte sua conta para iniciar.'} tone={connected ? 'green' : 'amber'} />
-            <MetricCard icon={WalletCards} label="SALDO DO MÊS" value="—" description="Será exibido após ativar a leitura financeira autenticada." />
-            <MetricCard icon={CircleDollarSign} label="DESPESAS DO MÊS" value="—" description="Sem valores simulados: os dados virão do Harmony Hub." tone="amber" />
-            <MetricCard icon={CreditCard} label="FATURAS E PARCELAS" value="—" description="Faturas, cartões e parcelas serão carregados pela integração." tone="violet" />
+            <MetricCard symbol="✓" label="CONEXÃO" value={connected ? 'Conectado' : 'Desconectado'} description={connected ? 'Vínculo identificado para sua conta.' : 'Conecte sua conta para iniciar.'} tone={connected ? 'green' : 'amber'} />
+            <MetricCard symbol="↗" label="SALDO DO MÊS" value="—" description="Será exibido após ativar a leitura financeira autenticada." />
+            <MetricCard symbol="◉" label="DESPESAS DO MÊS" value="—" description="Sem valores simulados: os dados virão do Harmony Hub." tone="amber" />
+            <MetricCard symbol="▤" label="FATURAS E PARCELAS" value="—" description="Faturas, cartões e parcelas serão carregados pela integração." tone="violet" />
           </div>
 
           <section className="app-card p-5 sm:p-6">
@@ -139,7 +121,7 @@ export default function FinancasPage() {
             <div className="mt-5 flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between" style={{ borderColor: 'var(--border)' }}>
               <p className="text-xs text-ink-soft">{lastUpdated ? `Última atualização do vínculo: ${lastUpdated}` : 'Última atualização: ainda não disponível'}</p>
               <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={() => void loadStatus()} className="secondary-button inline-flex items-center gap-2"><RefreshCw className="h-4 w-4" /> Atualizar status</button>
+                <button type="button" onClick={() => void loadStatus()} className="secondary-button inline-flex items-center gap-2"><span aria-hidden="true">↻</span> Atualizar status</button>
                 <Link href="/ajustes/harmony" className="primary-button inline-flex items-center justify-center">Configurar integração</Link>
               </div>
             </div>
