@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { IconHome, IconWeek, IconTasks, IconHabit, IconNote, IconGoal, IconBell, IconSettings, IconSparkle, IconMore, IconGoal } from './icons';
+import { IconHome, IconWeek, IconTasks, IconHabit, IconNote, IconGoal, IconBell, IconSettings, IconSparkle, IconMore } from './icons';
 
 const NAV = [
   { href:'/inicio', label:'CENTRAL DE COMANDO', Icon:IconHome },
