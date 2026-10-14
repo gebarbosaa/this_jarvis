@@ -244,6 +244,7 @@ export default function FinancasPage() {
           )}
 
 
+          {status.finance && (
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             <section className="app-card p-5 sm:p-6">
               <div className="mb-4">
@@ -340,6 +341,7 @@ export default function FinancasPage() {
               )}
             </section>
           </div>
+          )}
 
           <p className="px-1 text-xs leading-5 text-ink-soft">
             Privacidade: os números financeiros só serão exibidos depois de validar a autenticação, as permissões e o escopo da sua conta. Nenhum dado financeiro fictício é usado neste painel.
