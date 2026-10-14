@@ -11,6 +11,11 @@ const NAV = [
   { href:'/rotina', label:'ROTINA E HORÁRIOS', Icon:IconWeek },
   { href:'/tarefas', label:'TAREFAS', Icon:IconTasks },
   { href:'/habitos', label:'HÁBITOS E PROGRESSO', Icon:IconHabit },
+  { href:'/desenvolvimento-pessoal', label:'DESENVOLVIMENTO PESSOAL', Icon:IconSparkle },
+  { href:'/casa', label:'CASA', Icon:IconHome },
+  { href:'/leitura', label:'LEITURA', Icon:IconNote },
+  { href:'/alimentacao', label:'ALIMENTAÇÃO', Icon:IconGoal },
+  { href:'/habitos-rotina', label:'HÁBITOS / ROTINA', Icon:IconHabit },
   { href:'/notas', label:'NOTAS', Icon:IconNote },
   { href:'/objetivos', label:'OBJETIVOS', Icon:IconGoal },
   { href:'/lembretes', label:'LEMBRETES', Icon:IconBell },
@@ -33,11 +38,8 @@ export function Sidebar() {
         <button type="button" onClick={()=>setOpen(false)} aria-label="Fechar menu" className="ml-auto flex h-9 w-9 items-center justify-center rounded-xl text-xl text-ink-soft hover:bg-secondary hover:text-ink lg:hidden">×</button>
       </div>
       <div className="mx-3 mt-4 rounded-xl border border-primary/20 bg-primary/5 px-3 py-3">
-        <div className="flex items-center gap-2">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-primary shadow-[0_0_10px_rgba(70,205,255,.8)]" />
-          <p className="label-caps text-[9px] font-bold tracking-[.16em] text-primary">SISTEMAS OPERACIONAIS</p>
-        </div>
-        <p className="mt-1 text-[10px] text-ink-soft">Rotina · hábitos · tarefas · objetivos</p>
+        <div className="flex items-center gap-2"><span className="h-2 w-2 animate-pulse rounded-full bg-primary shadow-[0_0_10px_rgba(70,205,255,.8)]" /><p className="label-caps text-[9px] font-bold tracking-[.16em] text-primary">SISTEMAS OPERACIONAIS</p></div>
+        <p className="mt-1 text-[10px] text-ink-soft">Rotina · hábitos · casa · leitura · finanças</p>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4 pb-6">
         {NAV.map(({href,label,Icon})=>{
@@ -49,12 +51,7 @@ export function Sidebar() {
           </Link>;
         })}
       </nav>
-      <div className="border-t border-sidebarBorder/70 p-4">
-        <div className="rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 to-transparent p-4">
-          <p className="label-caps text-[9px] font-bold tracking-[.15em] text-primary">PAINEL DE CONTROLE</p>
-          <p className="mt-1 text-[10px] leading-relaxed text-ink-soft">Acompanhe sua rotina, registre hábitos e mantenha seus objetivos em andamento.</p>
-        </div>
-      </div>
+      <div className="border-t border-sidebarBorder/70 p-4"><div className="rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 to-transparent p-4"><p className="label-caps text-[9px] font-bold tracking-[.15em] text-primary">PAINEL DE CONTROLE</p><p className="mt-1 text-[10px] leading-relaxed text-ink-soft">Acompanhe sua rotina, registre hábitos e mantenha seus objetivos em andamento.</p></div></div>
     </>
   );
   return <>
