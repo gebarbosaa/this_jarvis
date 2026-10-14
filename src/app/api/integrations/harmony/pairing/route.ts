@@ -8,7 +8,7 @@ export async function POST() {
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error || !user) return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 });
 
-  const code = randomBytes(4).toString('hex').toUpperCase();
+  const code = randomBytes(6).toString('hex').toUpperCase();
   const token = randomBytes(32).toString('hex');
   const expires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
   const admin = createAdminClient() as any;
@@ -23,6 +23,9 @@ export async function POST() {
     metadata: { pairing_code: code, pairing_expires_at: expires, shared_token: token }
   }, { onConflict: 'user_id,provider' });
 
-  if (upsertError) return NextResponse.json({ error: upsertError.message }, { status: 500 });
+  if (upsertError) {
+    console.error('[harmony-pairing] failed to create pairing code', upsertError.message);
+    return NextResponse.json({ error: 'Não foi possível gerar o código de vinculação.' }, { status: 500 });
+  }
   return NextResponse.json({ code, expires_at: expires });
 }
