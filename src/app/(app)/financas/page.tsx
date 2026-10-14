@@ -104,7 +104,7 @@ function MetricCard({ symbol, label, value, description, tone = 'cyan' }: {
   );
 }
 
-const money = (value: number | string | undefined) =>
+const money = (value: number | string | null | undefined) =>
   typeof value === 'number' || typeof value === 'string'
     ? Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
     : '—';
