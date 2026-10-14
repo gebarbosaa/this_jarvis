@@ -17,6 +17,42 @@ type FinanceTransaction = {
   installment_current: number | null;
   installment_total: number | null;
 };
+type FinanceCard = {
+  id: string;
+  name: string;
+  brand: string | null;
+  last4: string | null;
+  credit_limit: number | string | null;
+  close_day: number | null;
+  due_day: number | null;
+};
+type FinanceInvoice = {
+  id: string;
+  card_id: string;
+  period: string;
+  total: number | string;
+  status: string;
+};
+type FinanceInstallment = {
+  id: string;
+  name: string;
+  purchase_date: string;
+  total_amount: number | string;
+  installments_count: number;
+  paid_count: number;
+  category: string | null;
+  responsible: string | null;
+  card_id: string | null;
+  card_name: string | null;
+};
+type FinanceFixedCost = {
+  id: string;
+  name: string;
+  amount: number | string;
+  due_day: number | null;
+  category: string | null;
+  responsible: string | null;
+};
 type FinancePayload = {
   period: string;
   summary: {
@@ -30,6 +66,10 @@ type FinancePayload = {
     fixed_costs_count: number;
   };
   transactions: FinanceTransaction[];
+  cards: FinanceCard[];
+  invoices: FinanceInvoice[];
+  installments: FinanceInstallment[];
+  fixed_costs: FinanceFixedCost[];
   synced_at: string;
 };
 type IntegrationStatus = {
@@ -202,6 +242,104 @@ export default function FinancasPage() {
               )}
             </section>
           )}
+
+
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <section className="app-card p-5 sm:p-6">
+              <div className="mb-4">
+                <p className="section-label">CARTÕES</p>
+                <h2 className="mt-2 text-lg font-bold text-ink">Cartões vinculados</h2>
+              </div>
+              {!status.finance.cards.length ? (
+                <p className="py-5 text-sm text-ink-soft">Nenhum cartão cadastrado no Harmony Hub.</p>
+              ) : (
+                <div className="space-y-3">
+                  {status.finance.cards.map((card) => (
+                    <div key={card.id} className="rounded-xl border p-4" style={{ borderColor: 'var(--border)' }}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-ink">{card.name}</p>
+                          <p className="mt-1 text-xs text-ink-soft">{[card.brand, card.last4 ? `final ${card.last4}` : null].filter(Boolean).join(' · ') || 'Cartão de crédito'}</p>
+                        </div>
+                        <p className="shrink-0 text-sm font-bold text-ink">{money(card.credit_limit)}</p>
+                      </div>
+                      <p className="mt-3 text-xs text-ink-soft">Fechamento: {card.close_day ?? '—'} · Vencimento: {card.due_day ?? '—'}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="mt-3 text-[11px] text-ink-soft">Limites e datas são somente leitura e vêm do Harmony Hub.</p>
+            </section>
+
+            <section className="app-card p-5 sm:p-6">
+              <div className="mb-4">
+                <p className="section-label">FATURAS</p>
+                <h2 className="mt-2 text-lg font-bold text-ink">Faturas de {status.finance.period}</h2>
+              </div>
+              {!status.finance.invoices.length ? (
+                <p className="py-5 text-sm text-ink-soft">Nenhuma fatura encontrada para este mês.</p>
+              ) : (
+                <div className="space-y-3">
+                  {status.finance.invoices.map((invoice) => {
+                    const card = status.finance!.cards.find((item) => item.id === invoice.card_id);
+                    return (
+                      <div key={invoice.id} className="flex items-center justify-between gap-3 rounded-xl border p-4" style={{ borderColor: 'var(--border)' }}>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-ink">{card?.name ?? 'Cartão'}</p>
+                          <p className="mt-1 text-xs text-ink-soft">{invoice.period} · {invoice.status}</p>
+                        </div>
+                        <p className="shrink-0 text-sm font-bold text-ink">{money(invoice.total)}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+
+            <section className="app-card p-5 sm:p-6">
+              <div className="mb-4">
+                <p className="section-label">PARCELADOS</p>
+                <h2 className="mt-2 text-lg font-bold text-ink">Compras parceladas</h2>
+              </div>
+              {!status.finance.installments.length ? (
+                <p className="py-5 text-sm text-ink-soft">Nenhuma compra parcelada cadastrada.</p>
+              ) : (
+                <div className="divide-y" style={{ borderColor: 'var(--border)' }}>
+                  {status.finance.installments.slice(0, 12).map((item) => (
+                    <div key={item.id} className="flex items-center justify-between gap-3 py-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-ink">{item.name}</p>
+                        <p className="mt-1 text-xs text-ink-soft">{item.card_name || item.category || 'Parcelado'} · {item.paid_count}/{item.installments_count} pagas</p>
+                      </div>
+                      <p className="shrink-0 text-sm font-bold text-ink">{money(item.total_amount)}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section className="app-card p-5 sm:p-6">
+              <div className="mb-4">
+                <p className="section-label">CUSTOS FIXOS</p>
+                <h2 className="mt-2 text-lg font-bold text-ink">Compromissos recorrentes</h2>
+              </div>
+              {!status.finance.fixed_costs.length ? (
+                <p className="py-5 text-sm text-ink-soft">Nenhum custo fixo cadastrado.</p>
+              ) : (
+                <div className="divide-y" style={{ borderColor: 'var(--border)' }}>
+                  {status.finance.fixed_costs.slice(0, 12).map((item) => (
+                    <div key={item.id} className="flex items-center justify-between gap-3 py-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-ink">{item.name}</p>
+                        <p className="mt-1 text-xs text-ink-soft">Vencimento dia {item.due_day ?? '—'}{item.category ? ` · ${item.category}` : ''}</p>
+                      </div>
+                      <p className="shrink-0 text-sm font-bold text-ink">{money(item.amount)}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
 
           <p className="px-1 text-xs leading-5 text-ink-soft">
             Privacidade: os números financeiros só serão exibidos depois de validar a autenticação, as permissões e o escopo da sua conta. Nenhum dado financeiro fictício é usado neste painel.
