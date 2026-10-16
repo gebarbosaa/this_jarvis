@@ -30,7 +30,7 @@ export async function GET() {
   let dataError: string | null = null;
 
   if (connected && token) {
-    const baseUrl = (process.env.HARMONY_HUB_URL || 'https://harmony-hub-psi-hazel.vercel.app').replace(/\/$/, '');
+    const baseUrl = (process.env.HARMONY_HUB_URL || 'https://harmony-hub-gedograuuu.vercel.app').replace(/\/$/, '');
     try {
       const response = await fetch(`${baseUrl}/api/jarvis/finance`, {
         method: 'GET',
