@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 type Entry = { id: string; text: string; done?: boolean; extra?: string; createdAt: string };
@@ -24,11 +24,13 @@ function useEntries(module: ModuleKey, tab: string) {
   const [entries,setEntries] = useState<Entry[]>([]);
   const [loadedKey,setLoadedKey] = useState('');
   const [userId,setUserId] = useState<string | null>(null);
+  const loadingRef = useRef(true);
   const activeKey = module + ':' + tab;
   const ready = loadedKey === activeKey;
 
   useEffect(() => {
     let cancelled = false;
+    loadingRef.current = true;
     setLoadedKey('');
     const localEntries = (() => {
       try {
@@ -42,7 +44,7 @@ function useEntries(module: ModuleKey, tab: string) {
         const supabase = createClient();
         const { data: auth, error: authError } = await supabase.auth.getUser();
         if (authError || !auth.user) {
-          if (!cancelled) { setUserId(null); setEntries(localEntries); setLoadedKey(activeKey); }
+          if (!cancelled) { loadingRef.current = false; setUserId(null); setEntries(localEntries); setLoadedKey(activeKey); }
           return;
         }
         const uid = auth.user.id;
@@ -61,10 +63,10 @@ function useEntries(module: ModuleKey, tab: string) {
             if (saveError) console.error('[personal-module-sync] migration failed',saveError.message);
           }
         }
-        if (!cancelled) setLoadedKey(activeKey);
+        if (!cancelled) { loadingRef.current = false; setLoadedKey(activeKey); }
       } catch (error) {
         console.error('[personal-module-sync] load failed',error);
-        if (!cancelled) { setUserId(null); setEntries(localEntries); setLoadedKey(activeKey); }
+        if (!cancelled) { loadingRef.current = false; setUserId(null); setEntries(localEntries); setLoadedKey(activeKey); }
       }
     }
     void load();
@@ -72,7 +74,7 @@ function useEntries(module: ModuleKey, tab: string) {
   },[module,tab,activeKey]);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || loadingRef.current) return;
     try { localStorage.setItem(keyFor(module,tab),JSON.stringify(entries)); } catch {}
     if (!userId) return;
     const timeout = window.setTimeout(async () => {
