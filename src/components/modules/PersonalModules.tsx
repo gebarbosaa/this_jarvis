@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 type Entry = { id: string; text: string; done?: boolean; extra?: string; createdAt: string };
 type Store = Record<string, Entry[]>;
