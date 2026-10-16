@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 type Entry = { id: string; text: string; done?: boolean; extra?: string; createdAt: string };
-type Store = Record<string, Entry[]>;
 type ModuleKey = 'desenvolvimento-pessoal' | 'casa' | 'leitura' | 'alimentacao' | 'habitos-rotina';
 const CONFIG: Record<ModuleKey, { title: string; emoji: string; description: string; tabs: string[] }> = {
   'desenvolvimento-pessoal': { title: 'Desenvolvimento Pessoal', emoji: '🌱', description: 'Um espaço para se conhecer, cuidar de si e acompanhar seu crescimento.', tabs: ['Sobre mim','Metas','Diário','Humor & Score','Respiração','Gratidão','Carta','30 Dias'] },
@@ -23,12 +22,70 @@ const QUOTES = ['Pequenos passos também levam longe.','Você não precisa fazer
 function keyFor(module: ModuleKey, tab: string) { return 'jarvis-module-v1:' + module + ':' + tab; }
 function useEntries(module: ModuleKey, tab: string) {
   const [entries,setEntries] = useState<Entry[]>([]);
-  const [ready,setReady] = useState(false);
+  const [loadedKey,setLoadedKey] = useState('');
+  const [userId,setUserId] = useState<string | null>(null);
+  const activeKey = module + ':' + tab;
+  const ready = loadedKey === activeKey;
+
   useEffect(() => {
-    try { const raw = localStorage.getItem(keyFor(module,tab)); if (raw) setEntries(JSON.parse(raw)); } catch {}
-    setReady(true);
-  },[module,tab]);
-  useEffect(() => { if (ready) { try { localStorage.setItem(keyFor(module,tab),JSON.stringify(entries)); } catch {} } },[entries,ready,module,tab]);
+    let cancelled = false;
+    setLoadedKey('');
+    const localEntries = (() => {
+      try {
+        const raw = localStorage.getItem(keyFor(module,tab));
+        const value = raw ? JSON.parse(raw) : [];
+        return Array.isArray(value) ? value as Entry[] : [];
+      } catch { return []; }
+    })();
+    async function load() {
+      try {
+        const supabase = createClient();
+        const { data: auth, error: authError } = await supabase.auth.getUser();
+        if (authError || !auth.user) {
+          if (!cancelled) { setUserId(null); setEntries(localEntries); setLoadedKey(activeKey); }
+          return;
+        }
+        const uid = auth.user.id;
+        const { data, error } = await (supabase as any).from('personal_module_data')
+          .select('entries').eq('user_id',uid).eq('module_key',module).eq('tab_key',tab).maybeSingle();
+        if (cancelled) return;
+        setUserId(uid);
+        if (!error && data && Array.isArray(data.entries)) {
+          setEntries(data.entries as Entry[]);
+          try { localStorage.setItem(keyFor(module,tab),JSON.stringify(data.entries)); } catch {}
+        } else {
+          setEntries(localEntries);
+          if (!error && localEntries.length) {
+            const { error: saveError } = await (supabase as any).from('personal_module_data')
+              .upsert({user_id:uid,module_key:module,tab_key:tab,entries:localEntries,updated_at:new Date().toISOString()},{onConflict:'user_id,module_key,tab_key'});
+            if (saveError) console.error('[personal-module-sync] migration failed',saveError.message);
+          }
+        }
+        if (!cancelled) setLoadedKey(activeKey);
+      } catch (error) {
+        console.error('[personal-module-sync] load failed',error);
+        if (!cancelled) { setUserId(null); setEntries(localEntries); setLoadedKey(activeKey); }
+      }
+    }
+    void load();
+    return () => { cancelled = true; };
+  },[module,tab,activeKey]);
+
+  useEffect(() => {
+    if (!ready) return;
+    try { localStorage.setItem(keyFor(module,tab),JSON.stringify(entries)); } catch {}
+    if (!userId) return;
+    const timeout = window.setTimeout(async () => {
+      try {
+        const supabase = createClient();
+        const { error } = await (supabase as any).from('personal_module_data')
+          .upsert({user_id:userId,module_key:module,tab_key:tab,entries,updated_at:new Date().toISOString()},{onConflict:'user_id,module_key,tab_key'});
+        if (error) console.error('[personal-module-sync] save failed',error.message);
+      } catch (error) { console.error('[personal-module-sync] save failed',error); }
+    },450);
+    return () => window.clearTimeout(timeout);
+  },[entries,ready,userId,module,tab]);
+
   const add = (text: string, extra = '') => { const clean=text.trim(); if (!clean) return; setEntries(old => [{id:crypto.randomUUID(),text:clean,extra,createdAt:new Date().toISOString()},...old]); };
   const remove = (id: string) => setEntries(old => old.filter(e=>e.id!==id));
   const toggle = (id: string) => setEntries(old=>old.map(e=>e.id===id?{...e,done:!e.done}:e));
